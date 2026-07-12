@@ -1,0 +1,7 @@
+{
+  "model": {
+    "provider": "openrouter",
+    "main_model": "z-ai/glm-5.2",
+    "utility_model": "z-ai/glm-5.2"
+  }
+}

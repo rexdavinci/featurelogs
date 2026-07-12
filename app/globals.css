@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f4ef;
+  --foreground: #17110d;
+  --surface: #fffdf9;
+  --surface-muted: #f1ece4;
+  --border: #d5cab8;
+  --accent: #2a6f4f;
+  --accent-strong: #194a34;
+  --danger: #b42318;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-sora);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 20% -10%, #fff2da, transparent 40%),
+    radial-gradient(circle at 90% 8%, #e4f7ea, transparent 34%),
+    linear-gradient(180deg, #fbf8f3 0%, #f0e8dd 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sora), sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+.surface {
+  background: var(--surface);
+}
+
+.surface-muted {
+  background: var(--surface-muted);
+}
+
+.glass {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.6s ease-out both;
+}
+
+.animate-rise-delayed {
+  animation: rise 0.75s ease-out both;
 }
