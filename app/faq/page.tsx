@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import * as Accordion from "@radix-ui/react-accordion";
+import type { Metadata } from "next";
 import { ChevronDown, CircleHelp, CreditCard, Home, ShieldCheck } from "lucide-react";
 
 const FAQ_ITEMS = [
@@ -42,9 +43,39 @@ const FAQ_ITEMS = [
   },
 ];
 
+export const metadata: Metadata = {
+  title: "FAQ",
+  description:
+    "Answers about FeatureLogs pricing, generation limits, onboarding, premium channels, and style templates.",
+  alternates: {
+    canonical: "/faq",
+  },
+};
+
 export default function FAQPage() {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    "http://localhost:3000";
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+    url: `${siteUrl}/faq`,
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden px-6 py-8 sm:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="pointer-events-none absolute inset-0 opacity-80">
         <div className="absolute -left-28 top-20 h-64 w-64 rounded-full bg-(--accent)/10 blur-3xl" />
         <div className="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-(--accent-strong)/10 blur-3xl" />
@@ -116,6 +147,38 @@ export default function FAQPage() {
               </Accordion.Item>
             ))}
           </Accordion.Root>
+
+          <div className="mt-6 rounded-2xl border bg-white/75 p-4">
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
+              Related Use Cases
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <Link
+                href="/use-cases/ai-changelog-generator"
+                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                AI Changelog Generator
+              </Link>
+              <Link
+                href="/use-cases/release-notes-generator-for-startups"
+                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                Release Notes Generator for Startups
+              </Link>
+              <Link
+                href="/use-cases/social-content-from-git-commits"
+                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                Social Content from Git Commits
+              </Link>
+              <Link
+                href="/use-cases"
+                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                Browse All Use Cases
+              </Link>
+            </div>
+          </div>
         </section>
       </div>
     </main>

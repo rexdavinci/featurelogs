@@ -1,9 +1,19 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import DashboardClient from "./dashboard-client";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { isoHoursAgo, monthStartIso } from "@/utils/tiers";
 import { mergeTemplates } from "@/utils/style-templates";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default async function DashboardPage() {
   const pageSize = 10;

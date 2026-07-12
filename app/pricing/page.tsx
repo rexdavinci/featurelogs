@@ -1,6 +1,7 @@
 import Script from "next/script";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -12,6 +13,15 @@ import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { monthStartIso } from "@/utils/tiers";
 import Image from "next/image";
+
+export const metadata: Metadata = {
+  title: "Pricing",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default async function PricingPage() {
   const cookieStore = await cookies();

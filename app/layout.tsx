@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import packageJson from "@/package.json";
+import { getSiteUrl } from "../utils/seo";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -15,8 +16,55 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FeatureLogs",
-  description: "Build-in-public changelog and social content engine",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: "FeatureLogs | Build In Public Content Engine",
+    template: "%s | FeatureLogs",
+  },
+  description:
+    "Turn rough product updates into polished changelogs, X threads, LinkedIn posts, FAQs, and newsletters.",
+  applicationName: "FeatureLogs",
+  keywords: [
+    "build in public",
+    "changelog generator",
+    "release notes",
+    "social content automation",
+    "founder marketing",
+    "product updates",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: "FeatureLogs | Build In Public Content Engine",
+    description:
+      "Create launch-ready changelogs and social posts from raw development notes.",
+    siteName: "FeatureLogs",
+    images: [
+      {
+        url: "/feature-logs.svg",
+        width: 512,
+        height: 512,
+        alt: "FeatureLogs logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FeatureLogs | Build In Public Content Engine",
+    description:
+      "Create launch-ready changelogs and social posts from raw development notes.",
+    images: ["/feature-logs.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
 };
 
 export default function RootLayout({

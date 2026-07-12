@@ -22,6 +22,11 @@ Copy `.env.example` to `.env.local` and fill values:
 cp .env.example .env.local
 ```
 
+Recommended SEO variables:
+
+- `NEXT_PUBLIC_SITE_URL=https://your-domain.com`
+- `GOOGLE_SITE_VERIFICATION=your-google-verification-token`
+
 ## SQL Setup
 
 Run SQL files in the `sql` folder in ascending order.
@@ -42,6 +47,19 @@ Open http://localhost:3000
 ```bash
 npm run build
 ```
+
+## Google Search Console Setup
+
+1. Deploy with `NEXT_PUBLIC_SITE_URL` and `GOOGLE_SITE_VERIFICATION` configured.
+2. Open Google Search Console and add your property (domain or URL-prefix).
+3. Verify ownership (the app now outputs the Google verification meta tag automatically).
+4. Submit this sitemap URL:
+
+```text
+https://your-domain.com/sitemap.xml
+```
+
+5. Monitor Indexing, Core Web Vitals, and Coverage reports for improvements.
 
 ## Tier Logic Implemented
 

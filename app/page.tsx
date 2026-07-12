@@ -2,16 +2,28 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowUpRight, Sparkles, Rocket, Gem } from "lucide-react";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { signIn, signUp } from "./login/actions";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { Header } from "./components/Header";
+import { getSiteUrl } from "@/utils/seo";
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
 };
 
+export const metadata: Metadata = {
+  title: "AI Changelog and Social Post Generator",
+  description:
+    "Convert raw product notes into public changelogs, X threads, LinkedIn posts, FAQs, and newsletters in minutes.",
+  alternates: {
+    canonical: "/",
+  },
+};
+
 export default async function Home({ searchParams }: Props) {
+  const siteUrl = getSiteUrl();
   const cookieStore = await cookies();
   const params = await searchParams;
   const supabase = await createServerSupabaseClient(cookieStore);
@@ -23,8 +35,28 @@ export default async function Home({ searchParams }: Props) {
     redirect("/dashboard");
   }
 
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "FeatureLogs",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: siteUrl,
+    description:
+      "Turn rough product updates into polished public changelogs and social distribution content.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden px-6 py-8 sm:px-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
+      />
       <div className="pointer-events-none absolute inset-0 opacity-80">
         <div className="absolute -left-28 top-20 h-64 w-64 rounded-full bg-(--accent)/10 blur-3xl" />
         <div className="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-(--accent-strong)/10 blur-3xl" />
@@ -159,6 +191,48 @@ export default async function Home({ searchParams }: Props) {
               </Link>
             </p> */}
           </div>
+        </section>
+
+        <section className="mt-10 rounded-2xl border bg-white/70 p-6">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
+            Popular SEO Landing Pages
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">
+            Explore High-Intent Use Cases
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              href="/use-cases"
+              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              AI Content Use Cases
+            </Link>
+            <Link
+              href="/use-cases/ai-changelog-generator"
+              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              AI Changelog Generator
+            </Link>
+            <Link
+              href="/use-cases/release-notes-generator-for-startups"
+              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Release Notes for Startups
+            </Link>
+            <Link
+              href="/use-cases/social-content-from-git-commits"
+              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Social Posts from Git Commits
+            </Link>
+          </div>
+          <p className="mt-4 text-sm text-zinc-600">
+            Need implementation details and limits? Visit the{" "}
+            <Link href="/faq" className="font-semibold text-(--accent-strong) underline underline-offset-2">
+              FeatureLogs FAQ
+            </Link>
+            .
+          </p>
         </section>
       </div>
     </main>
