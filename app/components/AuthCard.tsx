@@ -1,0 +1,193 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { FirebaseError } from "firebase/app";
+import { useAuth } from "@/lib/context/auth";
+import { loginUserAction } from "@/app/login/actions";
+import { KeyRound, Mail, Loader2, AlertCircle } from "lucide-react";
+
+export function AuthCard() {
+  const router = useRouter();
+  const { loginWithEmail, signupWithEmail } = useAuth();
+  const [isPending, startTransition] = useTransition();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMsg("");
+
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        let userCredential;
+        if (mode === "login") {
+          userCredential = await loginWithEmail(email, password);
+        } else {
+          userCredential = await signupWithEmail(email, password);
+        }
+
+        if (userCredential === null) {
+          setError("Authentication failed. Please try again.");
+          return;
+        }
+
+        const user = userCredential.user;
+        if (!user) {
+          setError("User not found after authentication.");
+          return;
+        }
+
+        // const emailVerified = user.emailVerified;
+        // if (!emailVerified) {
+        //   setError("Please verify your email before logging in.");
+        //   return;
+        // }
+
+        const idToken = await userCredential.user.getIdToken();
+        const res = await loginUserAction(idToken);
+
+        if (!res.ok) {
+          setError(res.error || "Failed to establish server session.");
+          return;
+        }
+
+        setSuccessMsg(
+          mode === "login"
+            ? "Signed in successfully!"
+            : "Account created successfully!",
+        );
+
+        // Refresh page to update Server Component state (Header and page layouts)
+        router.refresh();
+        // Redirect to dashboard
+        router.push("/dashboard");
+      } catch (err: unknown) {
+        console.error(err);
+        const errorCode = err instanceof FirebaseError ? err.code : "";
+        let msg = "An authentication error occurred.";
+        if (
+          errorCode === "auth/user-not-found" ||
+          errorCode === "auth/wrong-password" ||
+          errorCode === "auth/invalid-credential"
+        ) {
+          msg = "Invalid email or password.";
+        } else if (errorCode === "auth/email-already-in-use") {
+          msg = "This email is already registered.";
+        } else if (errorCode === "auth/invalid-email") {
+          msg = "Please enter a valid email address.";
+        }
+        setError(msg);
+      }
+    });
+  };
+
+  return (
+    <div className="glass rounded-3xl border border-white/60 p-5 shadow-[0_24px_80px_rgba(44,30,11,0.16)] sm:p-6 animate-rise">
+      <div className="mb-5 space-y-1">
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          {mode === "login" ? <>Welcome Back</> : <>Get Started</>}
+        </h2>
+        <p className="text-xs text-zinc-600">
+          {mode === "login"
+            ? "Sign in to manage your public changelogs."
+            : "Create an account to onboard your projects."}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>{error}</p>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 animate-pulse">
+            <p>{successMsg}</p>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600">
+            Email Address
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              disabled={isPending}
+              className="w-full rounded-xl border border-zinc-200 bg-white/70 pl-10 pr-3 py-2.5 text-sm outline-none focus:border-(--accent) focus:bg-white transition disabled:opacity-50"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600">
+            Password
+          </label>
+          <div className="relative">
+            <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              disabled={isPending}
+              className="w-full rounded-xl border border-zinc-200 bg-white/70 pl-10 pr-3 py-2.5 text-sm outline-none focus:border-(--accent) focus:bg-white transition disabled:opacity-50"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-white transition hover:bg-(--accent-strong) disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : mode === "login" ? (
+            "Sign In"
+          ) : (
+            "Create Account"
+          )}
+        </button>
+      </form>
+
+      <div className="mt-4 border-t pt-4 text-center">
+        <p className="text-xs text-zinc-600">
+          {mode === "login"
+            ? "New to FeatureLogs? "
+            : "Already have an account? "}
+          <button
+            onClick={() => {
+              setMode(mode === "login" ? "signup" : "login");
+              setError("");
+            }}
+            className="font-semibold text-(--accent) hover:underline cursor-pointer"
+          >
+            {mode === "login" ? "Create an account" : "Sign in instead"}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}

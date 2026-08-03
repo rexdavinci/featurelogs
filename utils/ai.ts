@@ -13,7 +13,6 @@ type GenerationResult = {
 type GenerateContentArgs = {
   projectName: string;
   rawInput: string;
-  isSubscribed: boolean;
   templates: StyleTemplates;
 };
 
@@ -25,7 +24,7 @@ const client = createOpenRouter({
 });
 
 function fallbackGeneration(args: GenerateContentArgs): GenerationResult {
-  const { projectName, rawInput, isSubscribed, templates } = args;
+  const { projectName, rawInput, templates } = args;
   const bullets = rawInput
     .split(/\n+/)
     .map((line) => line.trim())
@@ -39,15 +38,9 @@ function fallbackGeneration(args: GenerateContentArgs): GenerationResult {
     twitterMessages: [
       `Shipping update for ${projectName}:\n\n${rawInput.slice(0, 200)}\n\n${templates.twitter.hashtags}`,
     ],
-    linkedin: isSubscribed
-      ? `We pushed another release for ${projectName}.\n\n${rawInput.slice(0, 420)}\n\n${templates.linkedin.cta}`
-      : "Upgrade to unlock LinkedIn generation.",
-    helpFaq: isSubscribed
-      ? `### FAQ: ${projectName} release\n\n- **What changed?** ${rawInput.slice(0, 220)}\n- **How do I use it?** Follow the latest release guide.\n- **Need help?** ${templates.helpFaq.cta}`
-      : "Upgrade to unlock Help Center FAQ generation.",
-    emailNewsletter: isSubscribed
-      ? `Subject: ${projectName} weekly update\n\n${rawInput.slice(0, 500)}\n\n${templates.emailNewsletter.cta}`
-      : "Upgrade to unlock Email Newsletter generation.",
+    linkedin: `We pushed another release for ${projectName}.\n\n${rawInput.slice(0, 420)}\n\n${templates.linkedin.cta}`,
+    helpFaq: `### FAQ: ${projectName} release\n\n- **What changed?** ${rawInput.slice(0, 220)}\n- **How do I use it?** Follow the latest release guide.\n- **Need help?** ${templates.helpFaq.cta}`,
+    emailNewsletter: `Subject: ${projectName} weekly update\n\n${rawInput.slice(0, 500)}\n\n${templates.emailNewsletter.cta}`,
   };
 }
 
@@ -71,44 +64,16 @@ function normalizeTwitterMessages(
 export async function generateContent(
   args: GenerateContentArgs,
 ): Promise<GenerationResult> {
-  const { projectName, rawInput, isSubscribed, templates } = args;
+  const { projectName, rawInput, templates } = args;
   const apiKey = process.env.OPENAI_API_KEY;
-  const maxTwitterMessages = isSubscribed ? 4 : 1;
+  const maxTwitterMessages = 4;
 
   if (!apiKey) {
     return fallbackGeneration(args);
   }
 
-  const premiumInstructions = isSubscribed
-    ? "Include premium outputs for linkedin, helpFaq, and emailNewsletter."
-    : "Set linkedin, helpFaq, and emailNewsletter to empty strings.";
-
-  // const systemPrompt = `You are FeatureLogs, a concise build-in-public writer that returns ONLY valid JSON, no explanation, nothing else.`;
-
-  //   const userPrompt = `Project: ${projectName}
-  // Raw update text:\n${rawInput}
-
-  // Template settings:\n${JSON.stringify(templates)}
-
-  // ${premiumInstructions}
-
-  // Return strict JSON with keys changelog, twitterMessages, linkedin, helpFaq, emailNewsletter.
-  // {
-  //   "changelog": "<markdown section with title + bullets>",
-  //   "twitterMessages": "array of short thread messages. Maximum count: ${maxTwitterMessages}",
-  //   "linkedin": "structured post with hook + bullets + CTA",
-  //   "helpFaq": "help center style FAQ entry",
-  //   "emailNewsletter": "newsletter-ready update text"
-  // }`;
-
-  // const response = await client.responses.create({
-  //   model,
-  //   input: prompt,``
-  // });
-
   const prompt = `You are an expert Chief Marketing Officer (CMO) and Technical Writer for SaaS startups.
 Your goal is to turn technical, messy, raw git commits or quick informal text descriptions written by software founders into highly polished, engaging, and professional public-facing marketing copy and documentation.
-${premiumInstructions}
 Given the following raw input from a founder about what they built:
 ---
 ${rawInput}
@@ -132,9 +97,7 @@ Expected JSON output format:
 }`;
 
   const response = await generateText({
-    // model: client("xiaomi/mimo-v2.5"),
     model: client("openai/gpt-4.1-mini"),
-    // model: client("google/gemini-2.5-flash"),
     prompt,
     maxOutputTokens: 1500,
     temperature: 0.5,
@@ -161,24 +124,9 @@ Expected JSON output format:
         maxTwitterMessages,
         fallbackTwitter,
       ),
-      linkedin: String(
-        parsed.linkedin ??
-          (isSubscribed
-            ? templates.linkedin.cta
-            : "Upgrade to unlock LinkedIn generation."),
-      ),
-      helpFaq: String(
-        parsed.helpFaq ??
-          (isSubscribed
-            ? templates.helpFaq.cta
-            : "Upgrade to unlock Help Center FAQ generation."),
-      ),
-      emailNewsletter: String(
-        parsed.emailNewsletter ??
-          (isSubscribed
-            ? templates.emailNewsletter.cta
-            : "Upgrade to unlock Email Newsletter generation."),
-      ),
+      linkedin: String(parsed.linkedin ?? templates.linkedin.cta),
+      helpFaq: String(parsed.helpFaq ?? templates.helpFaq.cta),
+      emailNewsletter: String(parsed.emailNewsletter ?? templates.emailNewsletter.cta),
     };
   } catch {
     return fallbackGeneration(args);
@@ -195,7 +143,7 @@ export async function generateMonthlyNewsletterFromChangelogs(args: {
   const sourceText = changelogEntries.join("\n\n---\n\n").slice(0, 14000);
 
   if (!apiKey) {
-    return `## Monthly FeatureLogs Recap\n\n${sourceText.slice(0, 1600)}\n\n${templates.monthlyNewsletter.cta}`;
+    return `## Monthly FeatureLogs Recap\n\n${sourceText.slice(0, 1600)}\n\n${templates.monthlyRecap.cta}`;
   }
 
   const prompt = `You are an expert Chief Marketing Officer (CMO) and Technical Writer for SaaS startups.
@@ -211,18 +159,7 @@ ${JSON.stringify(templates)}
 Return plain markdown for a monthly newsletter that summarizes all the changelogs, highlights key features, and engages the audience with a clear call-to-action (CTA).
 `;
 
-  //   `Create a monthly newsletter from these changelogs.
-
-  // Tone instructions: ${templates.monthlyNewsletter.tone}
-  // CTA: ${templates.monthlyNewsletter.cta}
-  // Hashtags: ${templates.monthlyNewsletter.hashtags}
-
-  // Source changelogs:\n${sourceText}
-
-  // Return plain markdown only.`;
-
   const response = await generateText({
-    // model: client("xiaomi/mimo-v2.5"),
     model: client("openai/gpt-4.1-mini"),
     prompt,
     maxOutputTokens: 1500,
@@ -231,14 +168,6 @@ Return plain markdown for a monthly newsletter that summarizes all the changelog
 
   return (
     response.text ||
-    `## Monthly FeatureLogs Recap\n\n${templates.monthlyNewsletter.cta}`
+    `## Monthly FeatureLogs Recap\n\n${templates.monthlyRecap.cta}`
   );
 }
-
-// believe in the bible
-// 1 john
-// burned the qurans
-// hadith
-// different Qurans are traceable to the prophet and they didn't contradict each other
-// translations aren't reliable
-//

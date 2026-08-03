@@ -1,18 +1,7 @@
-export const FREE_LIMITS = {
-  projectCap: 1,
-  periodCap: 10,
-};
-
-export const PREMIUM_LIMITS = {
+export const FAIR_USE_LIMITS = {
   projectCap: 100,
   periodCap: 50,
-};
-
-export type Profile = {
-  id: string;
-  email: string;
-  is_subscribed: boolean;
-  stripe_customer_id: string | null;
+  periodHours: 24,
 };
 
 export function monthStartIso() {
@@ -25,10 +14,6 @@ export function isoHoursAgo(hours: number) {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 }
 
-export function formatUsageText(isSubscribed: boolean, used: number) {
-  if (isSubscribed) {
-    return `Pro Tier • ${used}/${PREMIUM_LIMITS.periodCap} in the last 24h`;
-  }
-
-  return `${used}/${FREE_LIMITS.periodCap} Free Logs Used this month`;
+export function formatUsageText(used: number) {
+  return `${used}/${FAIR_USE_LIMITS.periodCap} used in the last ${FAIR_USE_LIMITS.periodHours}h`;
 }

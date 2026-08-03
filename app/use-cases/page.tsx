@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Header } from "../components/Header";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -33,8 +34,9 @@ const USE_CASES = [
 
 export default function UseCasesPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden px-6 py-8 sm:px-8">
-      <div className="relative mx-auto w-full max-w-5xl">
+    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 sm:py-8">
+      <div className="relative mx-auto w-full max-w-5xl space-y-5">
+        <Header />
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
           FeatureLogs Use Cases
         </p>

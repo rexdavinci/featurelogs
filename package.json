@@ -14,15 +14,16 @@
     "@openrouter/sdk": "^0.13.42",
     "@radix-ui/react-accordion": "^1.2.16",
     "@radix-ui/react-tabs": "^1.1.17",
-    "@supabase/ssr": "^0.12.0",
-    "@supabase/supabase-js": "^2.110.2",
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.35.2",
     "ai": "^7.0.22",
+    "firebase": "^12.16.0",
+    "firebase-admin": "^13.6.0",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "openai": "^6.46.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "stripe": "^22.3.1"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

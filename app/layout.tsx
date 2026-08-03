@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import packageJson from "@/package.json";
+import { AuthProvider } from "@/lib/context/auth";
 import { getSiteUrl } from "../utils/seo";
+import { Footer } from "@/components/Footer";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -18,7 +19,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "FeatureLogs | Build In Public Content Engine",
+    default: "FeatureLogs | Open-source Release",
     template: "%s | FeatureLogs",
   },
   description:
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
-    title: "FeatureLogs | Build In Public Content Engine",
+    title: "FeatureLogs | Open-source Release",
     description:
       "Create launch-ready changelogs and social posts from raw development notes.",
     siteName: "FeatureLogs",
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FeatureLogs | Build In Public Content Engine",
+    title: "FeatureLogs | Open-source Release",
     description:
       "Create launch-ready changelogs and social posts from raw development notes.",
     images: ["/feature-logs.svg"],
@@ -75,13 +76,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${sora.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <div className="flex-1">{children}</div>
-        <footer className="border-t border-zinc-200/70 bg-white/60 px-6 py-3 text-center font-mono text-[11px] uppercase tracking-wider text-zinc-600 backdrop-blur-sm">
-          FeatureLogs v{packageJson.version}
-        </footer>
+        <AuthProvider>
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

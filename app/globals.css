@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f4ef;
-  --foreground: #17110d;
-  --surface: #fffdf9;
-  --surface-muted: #f1ece4;
-  --border: #d5cab8;
-  --accent: #2a6f4f;
-  --accent-strong: #194a34;
+  --background: #f7f2ea;
+  --foreground: #1c130d;
+  --surface: #fffdf8;
+  --surface-muted: #f2eadf;
+  --border: #d7c9b5;
+  --accent: #2f6b54;
+  --accent-strong: #204836;
   --danger: #b42318;
 }
 
@@ -24,9 +24,9 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 20% -10%, #fff2da, transparent 40%),
-    radial-gradient(circle at 90% 8%, #e4f7ea, transparent 34%),
-    linear-gradient(180deg, #fbf8f3 0%, #f0e8dd 100%);
+    radial-gradient(circle at 18% -10%, #fff3db, transparent 40%),
+    radial-gradient(circle at 88% 12%, #def3e5, transparent 34%),
+    linear-gradient(180deg, #fbf8f2 0%, #efe6d8 100%);
   color: var(--foreground);
   font-family: var(--font-sora), sans-serif;
 }
@@ -46,6 +46,10 @@ body {
 .glass {
   background: color-mix(in srgb, var(--surface) 72%, transparent);
   backdrop-filter: blur(10px);
+}
+
+a {
+  text-underline-offset: 0.18em;
 }
 
 @keyframes rise {

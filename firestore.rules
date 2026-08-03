@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerId(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function projectRequiredKeys() {
+      return ['id', 'userId', 'name', 'normalized', 'createdAt', 'updatedAt'];
+    }
+
+    function marketingKitRequiredKeys() {
+      return [
+        'id',
+        'userId',
+        'projectId',
+        'projectName',
+        'createdAt',
+        'rawInput',
+        'outputChangelog',
+        'outputTwitter',
+        'outputLinkedin',
+        'outputHelpFaq',
+        'outputEmailNewsletter'
+      ];
+    }
+
+    function isValidProjectCreate() {
+      return request.resource.data.keys().hasAll(projectRequiredKeys())
+        && request.resource.data.keys().hasOnly(projectRequiredKeys())
+        && request.resource.data.id is string
+        && request.resource.data.name is string
+        && request.resource.data.normalized is string
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && isOwnerId(request.resource.data.userId);
+    }
+
+    function projectOwnedByCaller(projectId) {
+      return exists(/databases/$(database)/documents/projects/$(projectId))
+        && get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
+    }
+
+    function isValidMarketingKitCreate() {
+      return request.resource.data.keys().hasAll(marketingKitRequiredKeys())
+        && request.resource.data.keys().hasOnly(marketingKitRequiredKeys())
+        && request.resource.data.id is string
+        && request.resource.data.projectId is string
+        && request.resource.data.projectName is string
+        && request.resource.data.createdAt is string
+        && request.resource.data.rawInput is string
+        && request.resource.data.outputChangelog is string
+        && request.resource.data.outputTwitter is string
+        && request.resource.data.outputLinkedin is string
+        && request.resource.data.outputHelpFaq is string
+        && request.resource.data.outputEmailNewsletter is string
+        && isOwnerId(request.resource.data.userId)
+        && projectOwnedByCaller(request.resource.data.projectId);
+    }
+
+    function isValidTemplateWrite() {
+      return request.resource.data.userId is string
+        && request.resource.data.projectId is string
+        && isOwnerId(request.resource.data.userId)
+        && projectOwnedByCaller(request.resource.data.projectId);
+    }
+
+    // User profile
+    match /profiles/{userId} {
+      allow read, write: if isOwnerId(userId);
+    }
+
+    // Projects (user can only create/read own records)
+    match /projects/{projectId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isValidProjectCreate();
+    }
+
+    // Marketing kits / generation logs (user can only create/read own records)
+    match /logs/{logId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isValidMarketingKitCreate();
+    }
+
+    // Style Templates
+    match /style_templates/{templateId} {
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidTemplateWrite();
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && isValidTemplateWrite();
+    }
+  }
+}

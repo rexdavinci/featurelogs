@@ -1,39 +1,23 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, Sparkles, Rocket, Gem } from "lucide-react";
-import Image from "next/image";
 import type { Metadata } from "next";
-import { signIn, signUp } from "./login/actions";
-import { createServerSupabaseClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+import { ArrowRight, BadgeCheck, Bolt, BookOpen, Sparkles, Wand2 } from "lucide-react";
 import { Header } from "./components/Header";
+import { AuthCard } from "./components/AuthCard";
 import { getSiteUrl } from "@/utils/seo";
-
-type Props = {
-  searchParams: Promise<{ error?: string }>;
-};
+import { getSessionUser } from "@/utils/session";
 
 export const metadata: Metadata = {
-  title: "AI Changelog and Social Post Generator",
+  title: "FeatureLogs",
   description:
-    "Convert raw product notes into public changelogs, X threads, LinkedIn posts, FAQs, and newsletters in minutes.",
+    "Open-source release note and social content generator with Firestore storage and fair-use rate limits.",
   alternates: {
     canonical: "/",
   },
 };
 
-export default async function Home({ searchParams }: Props) {
+export default async function Home() {
   const siteUrl = getSiteUrl();
-  const cookieStore = await cookies();
-  const params = await searchParams;
-  const supabase = await createServerSupabaseClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
+  const user = await getSessionUser();
 
   const softwareSchema = {
     "@context": "https://schema.org",
@@ -43,196 +27,145 @@ export default async function Home({ searchParams }: Props) {
     operatingSystem: "Web",
     url: siteUrl,
     description:
-      "Turn rough product updates into polished public changelogs and social distribution content.",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
+      "Turn rough product updates into polished changelogs, social posts, and help docs.",
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-6 py-8 sm:px-10">
+    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
       />
+
       <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute -left-28 top-20 h-64 w-64 rounded-full bg-(--accent)/10 blur-3xl" />
-        <div className="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-(--accent-strong)/10 blur-3xl" />
+        <div className="absolute -left-28 top-16 h-72 w-72 rounded-full bg-(--accent)/10 blur-3xl" />
+        <div className="absolute bottom-8 right-0 h-80 w-80 rounded-full bg-(--accent-strong)/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col">
-        <Header />
-        {/* <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-(--accent) text-white">
-              <Image
-                src="/feature-logs.svg"
-                alt="FeatureLogs Logo"
-                // className="h-5 w-5"
-                width={50}
-                height={50}
-              />
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <Header userEmail={user?.email} />
+
+        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-white/75 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-(--accent-strong)">
+              <Sparkles className="h-3.5 w-3.5" />
+              Open-source release
             </div>
-            <div>
-              <p className="text-lg font-semibold">FeatureLogs</p>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                Build In Public Engine
+
+            <div className="space-y-4">
+              <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] text-foreground md:text-6xl">
+                Ship updates.
+                <br />
+                Write less.
+                <br />
+                Stay visible.
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-zinc-700 md:text-lg">
+                FeatureLogs turns raw release notes into changelogs, social posts, help docs, and newsletters. It stores your workspace in Firestore, rate-limits abuse with Redis, and keeps the flow simple enough to self-host.
               </p>
             </div>
-          </div>
-          <span className="rounded-full border bg-white/80 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-zinc-600">
-            SaaS Dashboard v1.0
-          </span>
-        </header> */}
 
-        <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-          <div className="animate-rise">
-            <p className="mb-5 inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.16em] text-(--accent-strong)">
-              Designed For Founders & Product Teams
-            </p>
-            <h1 className="max-w-2xl text-4xl font-semibold leading-[1.08] text-foreground md:text-6xl">
-              Ship updates.
-              <br />
-              Stay visible.
-              <br />
-              Grow faster.
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-700">
-              FeatureLogs transforms rough git commits into polished public updates, social posts, newsletters, documentation and more.
-            </p>
-
-            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border bg-white/75 p-4">
-                <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  <Rocket className="h-3.5 w-3.5" />
-                  Usage
-                </p>
-                <p className="text-3xl font-semibold text-(--accent-strong)">
-                  10/mo
-                </p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Free usage for fast validation
-                </p>
-              </div>
-              <div className="rounded-2xl border bg-white/75 p-4">
-                <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                  <Gem className="h-3.5 w-3.5" />
-                  Premium
-                </p>
-                <p className="text-3xl font-semibold text-(--accent-strong)">
-                  100
-                </p>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Projects on Premium
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="animate-rise-delayed glass rounded-3xl border p-7 shadow-[0_26px_80px_rgba(44,30,11,0.2)] sm:p-8">
-            <h2 className="text-3xl font-semibold">Welcome Back</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              Sign in to access your release workspace.
-            </p>
-
-            {params.error ? (
-              <p className="mt-4 rounded-xl border border-(--danger)/40 bg-(--danger)/10 p-3 text-sm text-(--danger)">
-                {params.error}
-              </p>
-            ) : null}
-
-            <form className="mt-6 space-y-4">
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                  placeholder="you@startup.com"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                  placeholder="••••••••"
-                />
-              </div>
-              <button
-                type="submit"
-                formAction={signIn}
-                className="w-full rounded-xl bg-(--accent) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--accent-strong)"
+            {/* <div className="flex flex-wrap gap-3">
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-white transition hover:bg-(--accent-strong)"
               >
-                Sign In
-              </button>
-              <button
-                type="submit"
-                formAction={signUp}
-                className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                Open Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/faq"
+                className="inline-flex items-center gap-2 rounded-xl border bg-white/80 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-white"
               >
-                Create Account
-              </button>
-            </form>
-
-            {/* <p className="mt-6 text-xs text-zinc-500">
-              Need details on plan limits and sharing features?
-              <Link href="/faq" className="ml-1 text-(--accent-strong) underline underline-offset-2">
+                <BookOpen className="h-4 w-4" />
                 Read FAQ
               </Link>
-            </p> */}
+            </div> */}
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["Secure Login", "Manage your own projects, changelogs, and content templates safely."],
+                ["Fair use", "Upstash-backed rate limits keep the service healthy."],
+                ["Firestore storage", "Projects, templates, and drafts stay in Google Firestore."],
+              ].map(([title, body]) => (
+                <div key={title} className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
+                  <p className="text-sm font-semibold text-foreground">{title}</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            {user ? (
+              <div className="glass rounded-3xl border p-5 shadow-[0_24px_80px_rgba(44,30,11,0.16)] sm:p-6">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 rounded-2xl border bg-(--surface-muted) p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Logged In</p>
+                  <p className="mt-2 text-sm leading-7 text-zinc-700">
+                    Welcome back, <strong className="text-zinc-900">{user.email}</strong>! You can now access your control center.
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-(--accent) px-4 py-2 text-xs font-semibold text-white transition hover:bg-(--accent-strong)"
+                  >
+                    Go to Dashboard
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+                  <div className="rounded-2xl border bg-white/80 p-4">
+                    <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      <Wand2 className="h-3.5 w-3.5" />
+                      What it makes
+                    </div>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-700">
+                      <p className="flex items-start gap-2">
+                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
+                        Public changelog markdown
+                      </p>
+                      <p className="flex items-start gap-2">
+                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
+                        X thread drafts
+                      </p>
+                      <p className="flex items-start gap-2">
+                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
+                        LinkedIn and newsletter copy
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border bg-white/80 p-4">
+                    <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      <Bolt className="h-3.5 w-3.5" />
+                      How it works
+                    </div>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-700">
+                      <p>1. Add a project.</p>
+                      <p>2. Paste raw release notes.</p>
+                      <p>3. Copy polished output.</p>
+                    </div>
+                  </div>
+                </div>
+
+                
+              </div>
+            ) : (
+              <AuthCard />
+            )}
           </div>
         </section>
 
-        <section className="mt-10 rounded-2xl border bg-white/70 p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-            Popular SEO Landing Pages
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Explore High-Intent Use Cases
-          </h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Link
-              href="/use-cases"
-              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
-            >
-              AI Content Use Cases
-            </Link>
-            <Link
-              href="/use-cases/ai-changelog-generator"
-              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
-            >
-              AI Changelog Generator
-            </Link>
-            <Link
-              href="/use-cases/release-notes-generator-for-startups"
-              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
-            >
-              Release Notes for Startups
-            </Link>
-            <Link
-              href="/use-cases/social-content-from-git-commits"
-              className="rounded-xl border bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
-            >
-              Social Posts from Git Commits
-            </Link>
-          </div>
-          <p className="mt-4 text-sm text-zinc-600">
-            Need implementation details and limits? Visit the{" "}
-            <Link href="/faq" className="font-semibold text-(--accent-strong) underline underline-offset-2">
-              FeatureLogs FAQ
-            </Link>
-            .
-          </p>
+        <section className="grid gap-3 sm:grid-cols-3">
+          {[
+            ["Release notes", "Convert notes into concise public changelogs."],
+            ["Audience updates", "Generate social posts and email-friendly summaries."],
+            ["Help content", "Spin release notes into FAQ and support drafts."],
+          ].map(([title, body]) => (
+            <div key={title} className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
+              <p className="text-base font-semibold text-foreground">{title}</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
+            </div>
+          ))}
         </section>
       </div>
     </main>

@@ -1,20 +1,6 @@
-export type TemplateKey =
-  | "changelog"
-  | "linkedin"
-  | "twitter"
-  | "helpFaq"
-  | "emailNewsletter"
-  | "monthlyNewsletter";
+import type { StyleTemplates, TemplateItem, TemplateKey } from "@/lib/types";
 
-export type TemplateItem = {
-  label: string;
-  tone: string;
-  cta: string;
-  hashtags: string;
-  premiumOnly?: boolean;
-};
-
-export type StyleTemplates = Record<TemplateKey, TemplateItem>;
+export type { StyleTemplates, TemplateItem, TemplateKey } from "@/lib/types";
 
 export const TEMPLATE_ORDER: TemplateKey[] = [
   "changelog",
@@ -22,7 +8,7 @@ export const TEMPLATE_ORDER: TemplateKey[] = [
   "linkedin",
   "helpFaq",
   "emailNewsletter",
-  "monthlyNewsletter",
+  "monthlyRecap",
 ];
 
 export const DEFAULT_STYLE_TEMPLATES: StyleTemplates = {
@@ -37,7 +23,6 @@ export const DEFAULT_STYLE_TEMPLATES: StyleTemplates = {
     tone: "Professional storytelling with a sharp hook and short paragraphs.",
     cta: "Comment with your launch strategy this week.",
     hashtags: "#startups #product #softwareengineering",
-    premiumOnly: true,
   },
   twitter: {
     label: "Twitter Thread",
@@ -50,21 +35,18 @@ export const DEFAULT_STYLE_TEMPLATES: StyleTemplates = {
     tone: "Step-by-step developer-friendly style with practical examples.",
     cta: "Need more help? Contact support for direct guidance.",
     hashtags: "#support #helpcenter #docs",
-    premiumOnly: true,
   },
   emailNewsletter: {
     label: "Email Newsletter",
     tone: "Warm founder voice with clear highlights and action items.",
     cta: "Reply to this email with your feedback.",
-    hashtags: "#newsletter #saas #community",
-    premiumOnly: true,
+    hashtags: "",
   },
-  monthlyNewsletter: {
-    label: "Monthly Newsletter",
+  monthlyRecap: {
+    label: "Monthly Recap",
     tone: "Executive monthly recap with wins, insights, and roadmap notes.",
     cta: "Share this recap with your team and investors.",
-    hashtags: "#monthlyrecap #buildinpublic #growth",
-    premiumOnly: true,
+    hashtags: "",
   },
 };
 
