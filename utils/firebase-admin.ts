@@ -1,33 +1,22 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import fs from "fs";
 
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
+const serviceKey = process.env.FIREBASE_SERVICE_KEY;
 
-let serviceAccount = undefined;
-
-if (serviceAccountPath) {
-  // Load JSON synchronously so cert() receives a real object
-  const raw = fs.readFileSync(serviceAccountPath, "utf8");
-  serviceAccount = JSON.parse(raw);
+if (!serviceKey) {
+  throw new Error("FIREBASE_SERVICE_KEY environment variable is not set");
 }
 
-const appConfig = serviceAccount
-  ? {
-      credential: cert(serviceAccount),
-      projectId: process.env.FIREBASE_PROJECT_ID,
-    }
-  : {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-    };
-
-const app =
-  getApps().length === 0
-    ? initializeApp(appConfig)
-    : getApps()[0];
+const app = getApps().length === 0 ? initializeApp({
+  credential: cert({
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    privateKey: serviceKey?.replace(/\\n/g, "\n"),
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  }),
+}) : getApps()[0];
 
 const adminAuth = getAuth(app);
 const adminDb = getFirestore(app);
 
-export { adminAuth, adminDb };
+export { app, adminAuth, adminDb };
