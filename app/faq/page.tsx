@@ -13,15 +13,15 @@ const FAQ_ITEMS = [
   },
   {
     id: "item-2",
-    question: "Do I need to onboard a project first?",
+    question: "Do I need to create a project first?",
     answer:
-      "Yes. Every generation is tied to an onboarded project. Use the project setup card on the dashboard, then select that project from the Project Name dropdown in the generator.",
+      "Yes. Create a project in your workspace, then select it when creating a kit. This keeps your drafts and voice settings organized.",
   },
   {
     id: "item-3",
     question: "What are the fair-use limits?",
     answer:
-      "The app is rate-limited to 50 generations in 24 hours and 100 projects per visitor session to keep the shared service usable.",
+      "The app is rate-limited to 50 generations in 24 hours and 100 projects per account to keep the shared service usable.",
   },
   {
     id: "item-4",
@@ -33,13 +33,13 @@ const FAQ_ITEMS = [
     id: "item-5",
     question: "Can I customize the writing voice?",
     answer:
-      "Yes. Save Tone & Style templates per project to shape tone, CTA style, and hashtags across future generations.",
+      "Yes. Save Your voice & style settings per project to shape tone, CTA style, and hashtags across future generations.",
   },
   {
     id: "item-6",
     question: "How is data stored?",
     answer:
-      "Projects, drafts, and templates are stored in Firestore under your session cookie. There is no Supabase layer in this version.",
+      "Your projects, drafts, and voice settings are saved to your account so you can return to them. A secure session cookie keeps you signed in.",
   },
 ];
 
@@ -71,17 +71,12 @@ export default function FAQPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 sm:py-8">
+    <main className="content-shell">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute -left-28 top-20 h-64 w-64 rounded-full bg-(--accent)/10 blur-3xl" />
-        <div className="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-(--accent-strong)/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto w-full max-w-5xl space-y-5">
+      <div className="space-y-8">
         <Header />
 
         <section className="glass rounded-2xl border p-6 shadow-[0_18px_60px_rgba(44,30,11,0.2)] sm:p-8">
@@ -90,17 +85,17 @@ export default function FAQPage() {
             Help Center
           </p>
           <h1 className="mt-2 text-4xl font-semibold text-foreground">Frequently Asked Questions</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-700">
-            Everything you need to onboard projects, generate consistent updates, and keep the workflow open-source friendly.
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-(--text-secondary)">
+            A few answers to help you go from your first project to your next great update.
           </p>
 
-          <div className="mt-5 rounded-2xl border bg-white/75 p-4">
-            <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="mt-5 rounded-2xl border bg-(--surface) p-4">
+            <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-(--text-muted)">
               <ShieldCheck className="h-3.5 w-3.5" />
               Quick Tips
             </p>
-            <ul className="mt-2 space-y-1 text-sm leading-7 text-zinc-700">
-              <li>Create at least one project in Dashboard before generation.</li>
+            <ul className="mt-2 space-y-1 text-sm leading-7 text-(--text-secondary)">
+              <li>Create your first project in the workspace.</li>
               <li>Use presets to quickly seed high-quality raw notes.</li>
               <li>Read the Terms page for fair-use guidance and rate limits.</li>
             </ul>
@@ -108,46 +103,46 @@ export default function FAQPage() {
 
           <Accordion.Root type="single" collapsible className="mt-6 space-y-3">
             {FAQ_ITEMS.map((item) => (
-              <Accordion.Item key={item.id} value={item.id} className="overflow-hidden rounded-xl border bg-white/80">
+              <Accordion.Item key={item.id} value={item.id} className="overflow-hidden rounded-xl border bg-(--surface)">
                 <Accordion.Header>
-                  <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-zinc-800">
+                  <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-foreground">
                     <span>{item.question}</span>
                     <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </Accordion.Trigger>
                 </Accordion.Header>
-                <Accordion.Content className="px-4 pb-4 text-sm leading-7 text-zinc-700">
+                <Accordion.Content className="px-4 pb-4 text-sm leading-7 text-(--text-secondary)">
                   {item.answer}
                 </Accordion.Content>
               </Accordion.Item>
             ))}
           </Accordion.Root>
 
-          <div className="mt-6 rounded-2xl border bg-white/75 p-4">
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
+          <div className="mt-6 rounded-2xl border bg-(--surface) p-4">
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-(--text-muted)">
               Related Use Cases
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <Link
                 href="/use-cases/ai-changelog-generator"
-                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                className="rounded-xl border bg-(--surface) px-3 py-2 text-sm font-semibold text-(--text-secondary) hover:bg-(--surface-muted)"
               >
                 AI Changelog Generator
               </Link>
               <Link
                 href="/use-cases/release-notes-generator-for-startups"
-                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                className="rounded-xl border bg-(--surface) px-3 py-2 text-sm font-semibold text-(--text-secondary) hover:bg-(--surface-muted)"
               >
                 Release Notes Generator for Startups
               </Link>
               <Link
                 href="/use-cases/social-content-from-git-commits"
-                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                className="rounded-xl border bg-(--surface) px-3 py-2 text-sm font-semibold text-(--text-secondary) hover:bg-(--surface-muted)"
               >
                 Social Content from Git Commits
               </Link>
               <Link
                 href="/use-cases"
-                className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                className="rounded-xl border bg-(--surface) px-3 py-2 text-sm font-semibold text-(--text-secondary) hover:bg-(--surface-muted)"
               >
                 Browse All Use Cases
               </Link>

@@ -356,3 +356,23 @@ export async function generatePackage(
     },
   };
 }
+
+export async function loadProjectStyleTemplates(projectId: string) {
+  const user = await getSessionUser();
+  if (!user || !projectId)
+    return {
+      ok: false as const,
+      error: "Select a project to load its voice settings.",
+    };
+  try {
+    return {
+      ok: true as const,
+      templates: await loadTemplates(user.uid, projectId),
+    };
+  } catch {
+    return {
+      ok: false as const,
+      error: "Couldn’t load this project’s voice settings. Please try again.",
+    };
+  }
+}

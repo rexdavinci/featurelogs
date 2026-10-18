@@ -1,33 +1,24 @@
 "use client";
-import type { Project, LogRecord } from "@/lib/types";
-import { useMemo, useState, useTransition } from "react";
+
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import * as Tabs from "@radix-ui/react-tabs";
 import {
-  BookOpen,
+  ArrowRight,
+  ArrowUpRight,
   Check,
-  CircleHelp,
+  ChevronDown,
   Clock3,
-  Copy,
-  Link2,
-  Mail,
-  Megaphone,
-  MessageCircle,
-  Newspaper,
+  FileText,
+  Folder,
+  Loader2,
   Plus,
-  Rocket,
-  ScrollText,
+  RotateCcw,
+  Sparkles,
   WandSparkles,
 } from "lucide-react";
+import type { LogRecord, Project } from "@/lib/types";
 import { FAIR_USE_LIMITS, formatUsageText } from "@/utils/tiers";
-import {
-  generateMonthlyNewsletter,
-  generatePackage,
-  onboardProject,
-  saveStyleTemplates,
-  type GenerationState,
-} from "./actions";
 import {
   DEFAULT_STYLE_TEMPLATES,
   TEMPLATE_ORDER,
@@ -36,6 +27,19 @@ import {
 } from "@/utils/style-templates";
 import { PRESETS } from "@/utils/presets";
 import { Header } from "../components/Header";
+import {
+  MarketingKit,
+  kitFromLog,
+  type KitOutput,
+} from "../components/MarketingKit";
+import { DraftModal } from "../components/DraftModal";
+import {
+  generateMonthlyNewsletter,
+  generatePackage,
+  loadProjectStyleTemplates,
+  onboardProject,
+  saveStyleTemplates,
+} from "./actions";
 
 type Props = {
   userEmail?: string | null;
@@ -45,58 +49,11 @@ type Props = {
   styleTemplates: StyleTemplates;
 };
 
-const BUILD_IN_PUBLIC_CHECKLIST = [
-  "Post one changelog update",
-  "Share one social thread",
-  "Capture one user-facing lesson",
-];
-
-function splitToTweets(input: string, maxMessages: number) {
-  const customBlocks = input
-    .split("\n\n---\n\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  if (customBlocks.length > 0) {
-    return customBlocks.slice(0, maxMessages);
-  }
-
-  const maxLen = 280;
-  const words = input.split(/\s+/);
-  const parts: string[] = [];
-  let current = "";
-
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length <= maxLen) {
-      current = candidate;
-    } else {
-      if (current) parts.push(current);
-      current = word;
-    }
-  }
-
-  if (current) parts.push(current);
-  return (parts.length ? parts : [input]).slice(0, maxMessages);
-}
-
-function CopyButton({ value }: { value: string }) {
-  const [done, setDone] = useState(false);
-
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        await navigator.clipboard.writeText(value);
-        setDone(true);
-        setTimeout(() => setDone(false), 1200);
-      }}
-      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50"
-    >
-      <Copy className="h-3.5 w-3.5" />
-      {done ? "Copied" : "Copy"}
-    </button>
-  );
+function displayDate(date: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(date));
 }
 
 export default function DashboardClient({
@@ -107,855 +64,669 @@ export default function DashboardClient({
   styleTemplates,
 }: Props) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, startGeneration] = useTransition();
   const [isSaving, startSaving] = useTransition();
   const [isMonthlyPending, startMonthly] = useTransition();
   const [isOnboarding, startOnboarding] = useTransition();
-  const [state, setState] = useState<GenerationState>({ ok: false });
+  const [isLoadingTemplates, startLoadingTemplates] = useTransition();
   const [panel, setPanel] = useState<"generator" | "templates">("generator");
-  const [templates, setTemplates] = useState<StyleTemplates>(styleTemplates);
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    projects[0]?.id ?? "",
+  );
+  const selectedIdRef = useRef(selectedProjectId);
+  const [templateCache, setTemplateCache] = useState<
+    Record<string, StyleTemplates>
+  >(() => (projects[0] ? { [projects[0].id]: styleTemplates } : {}));
   const [activeTemplate, setActiveTemplate] =
     useState<TemplateKey>("changelog");
   const [templateFeedback, setTemplateFeedback] = useState("");
-  const [monthlyText, setMonthlyText] = useState("");
-  const [monthlyError, setMonthlyError] = useState("");
-  const [selectedProject, setSelectedProject] = useState(
-    projects[0]?.name ?? "",
-  );
+  const [templateError, setTemplateError] = useState("");
   const [rawNotes, setRawNotes] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("");
-  const [onboardingProjectName, setOnboardingProjectName] = useState("");
-  const [onboardingMessage, setOnboardingMessage] = useState("");
-  const [onboardingError, setOnboardingError] = useState("");
+  const [projectName, setProjectName] = useState("");
+  const [showProjectForm, setShowProjectForm] = useState(projects.length === 0);
+  const [projectError, setProjectError] = useState("");
+  const [generationError, setGenerationError] = useState("");
+  const [generated, setGenerated] = useState<{
+    projectId: string;
+    output: KitOutput;
+    createdAt: string;
+  } | null>(null);
+  const [selectedDraft, setSelectedDraft] = useState<LogRecord | null>(null);
+  const [monthlyText, setMonthlyText] = useState("");
+  const [monthlyError, setMonthlyError] = useState("");
+  const kitRef = useRef<HTMLDivElement>(null);
 
-  const hasProjects = projects.length > 0;
-  const newest = logs[0];
-  const output =
-    state.payload ??
-    (newest
-      ? {
-          changelog: newest.outputChangelog,
-          twitter: newest.outputTwitter,
-          linkedin: newest.outputLinkedin,
-          helpFaq: newest.outputHelpFaq,
-          emailNewsletter: newest.outputEmailNewsletter,
-        }
-      : null);
-
-  const tweets = useMemo(
-    () => splitToTweets(output?.twitter ?? "", 4),
-    [output?.twitter],
+  const selectedProject = projects.find(
+    (project) => project.id === selectedProjectId,
   );
-  const latestThree = logs.slice(0, 3);
+  const newest = logs.find((log) => log.projectId === selectedProjectId);
+  const currentGenerated =
+    generated?.projectId === selectedProjectId ? generated : null;
+  const output =
+    currentGenerated?.output ?? (newest ? kitFromLog(newest) : null);
+  const templates = templateCache[selectedProjectId] ?? DEFAULT_STYLE_TEMPLATES;
   const currentTemplate = templates[activeTemplate];
   const remainingCredits = Math.max(FAIR_USE_LIMITS.periodCap - usageCount, 0);
-  const usageRatio = Math.min(
-    100,
-    Math.round((usageCount / FAIR_USE_LIMITS.periodCap) * 100),
-  );
-  const selectedProjectRecord = projects.find(
-    (project) => project.name === selectedProject,
-  );
-  const checklistCompleted = Math.min(logs.length, BUILD_IN_PUBLIC_CHECKLIST.length);
+  const projectLogs = logs.filter((log) => log.projectId === selectedProjectId);
 
-  function updateTemplateField(
-    field: "tone" | "cta" | "hashtags",
-    value: string,
-  ) {
-    setTemplates((prev) => ({
-      ...prev,
-      [activeTemplate]: {
-        ...prev[activeTemplate],
-        [field]: value,
+  function selectProject(id: string) {
+    selectedIdRef.current = id;
+    setSelectedProjectId(id);
+    setGenerationError("");
+    setTemplateFeedback("");
+    setTemplateError("");
+    if (!id || templateCache[id]) return;
+    startLoadingTemplates(async () => {
+      try {
+        const result = await loadProjectStyleTemplates(id);
+        if (result.ok)
+          setTemplateCache((cache) => ({ ...cache, [id]: result.templates }));
+        else if (selectedIdRef.current === id) setTemplateError(result.error);
+      } catch {
+        if (selectedIdRef.current === id)
+          setTemplateError(
+            "Couldn’t load your voice settings. Select the project again to retry.",
+          );
+      }
+    });
+  }
+
+  function updateTemplate(field: "tone" | "cta" | "hashtags", value: string) {
+    setTemplateCache((cache) => ({
+      ...cache,
+      [selectedProjectId]: {
+        ...templates,
+        [activeTemplate]: { ...currentTemplate, [field]: value },
       },
     }));
-  }
-
-  function applyPreset() {
-    const preset = PRESETS.find((item) => item.label === selectedPreset);
-    if (!preset) return;
-    setRawNotes(preset.text);
-  }
-
-  function switchPanel(nextPanel: "generator" | "templates") {
-    setPanel(nextPanel);
-  }
-
-  const dateFormatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  function formatDate(dateString: string) {
-    return dateFormatter.format(new Date(dateString));
+    setTemplateFeedback("You have unsaved changes.");
   }
 
   return (
-    <main className="relative overflow-hidden px-4 py-6 sm:px-6 sm:py-8">
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute -left-28 top-20 h-64 w-64 rounded-full bg-(--accent)/10 blur-3xl" />
-        <div className="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-(--accent-strong)/10 blur-3xl" />
+    <main className="workspace-shell workspace-v2">
+      <Header usageCount={usageCount} userEmail={userEmail} />
+      <div className="workspace-heading-row">
+        <div className="workspace-heading">
+          <p className="workspace-eyebrow">YOUR BUILD-IN-PUBLIC STUDIO</p>
+          <h1>Make your progress visible.</h1>
+          <p>
+            A little less staring at a blank page. A little more sharing what
+            you shipped.
+          </p>
+        </div>
+        <span className="workspace-date">
+          <span className="status-dot" /> Ready when you are
+        </span>
       </div>
 
-      <div className="relative mx-auto w-full max-w-7xl space-y-5">
-        <Header usageCount={usageCount} userEmail={userEmail} />
-
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="gradient-card rounded-2xl border p-4 shadow-[0_12px_40px_rgba(59,45,28,0.09)] sm:col-span-2 lg:col-span-2">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600">
-                  Credits
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-(--accent-strong)">
-                  {remainingCredits} left
-                </p>
-                <p className="text-xs text-zinc-600">{formatUsageText(usageCount)}</p>
-              </div>
-              <p className="rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-semibold text-zinc-600">
-                {remainingCredits > 0
-                  ? "You still have room to ship more updates today."
-                  : "Daily cap reached — refreshes within 24h."}
-              </p>
+      <div className="studio-layout">
+        <aside className="studio-sidebar">
+          <section className="studio-project-panel">
+            <div className="sidebar-section-heading">
+              <h2>Your project</h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={
+                  showProjectForm
+                    ? "Hide new project form"
+                    : "Create a new project"
+                }
+                aria-expanded={showProjectForm}
+                onClick={() => setShowProjectForm(!showProjectForm)}
+                disabled={isPending}
+              >
+                <Plus size={17} />
+              </button>
             </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
-              <div
-                className="h-full rounded-full bg-(--accent)"
-                style={{ width: `${usageRatio}%` }}
+            <label className="sr-only" htmlFor="studio-project">
+              Selected project
+            </label>
+            <div className="project-select-wrap">
+              <Folder size={17} />
+              <select
+                id="studio-project"
+                value={selectedProjectId}
+                disabled={
+                  !projects.length || isPending || isSaving || isOnboarding
+                }
+                onChange={(event) => selectProject(event.target.value)}
+              >
+                {!projects.length && (
+                  <option value="">Create your first project</option>
+                )}
+                {projects.map((project) => (
+                  <option value={project.id} key={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={15} />
+            </div>
+            {showProjectForm && (
+              <form
+                className="new-project-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!projectName.trim()) return;
+                  const formData = new FormData();
+                  formData.set("name", projectName.trim());
+                  setProjectError("");
+                  startOnboarding(async () => {
+                    try {
+                      const result = await onboardProject(formData);
+                      if (!result.ok) {
+                        setProjectError(
+                          result.error ?? "Couldn’t create your project.",
+                        );
+                        return;
+                      }
+                      if (result.projectId) selectProject(result.projectId);
+                      setProjectName("");
+                      setShowProjectForm(false);
+                      router.refresh();
+                    } catch {
+                      setProjectError(
+                        "Couldn’t create your project. Please try again.",
+                      );
+                    }
+                  });
+                }}
+              >
+                <label htmlFor="new-project">Project name</label>
+                <input
+                  id="new-project"
+                  required
+                  maxLength={120}
+                  autoComplete="off"
+                  placeholder="Your next big thing"
+                  value={projectName}
+                  disabled={isOnboarding}
+                  onChange={(event) => setProjectName(event.target.value)}
+                />
+                <button
+                  className="button button-dark"
+                  disabled={
+                    isOnboarding || !projectName.trim() || remainingCredits < 1
+                  }
+                >
+                  {isOnboarding ? (
+                    <Loader2 className="spin" size={14} />
+                  ) : (
+                    <Plus size={14} />
+                  )}
+                  {isOnboarding ? "Creating…" : "Create project"}
+                </button>
+                <p className="field-hint">
+                  Creating a new project uses 1 credit.
+                </p>
+              </form>
+            )}
+            {projectError && (
+              <p className="workspace-feedback error" role="alert">
+                {projectError}
+              </p>
+            )}
+            <nav className="studio-navigation" aria-label="Workspace sections">
+              <button
+                type="button"
+                aria-pressed={panel === "generator"}
+                onClick={() => setPanel("generator")}
+              >
+                <Sparkles size={17} /> Create a kit <ArrowRight size={14} />
+              </button>
+              <button
+                type="button"
+                aria-pressed={panel === "templates"}
+                onClick={() => setPanel("templates")}
+              >
+                <WandSparkles size={17} /> Voice & style{" "}
+                <ArrowRight size={14} />
+              </button>
+            </nav>
+          </section>
+
+          <section className="draft-history">
+            <div className="sidebar-section-heading">
+              <h2>Latest drafts</h2>
+              <span className="subtle-count">{logs.length}</span>
+            </div>
+            <p className="sidebar-description">Pick up where you left off.</p>
+            {logs.length ? (
+              <div className="draft-list">
+                {logs.slice(0, 6).map((draft) => (
+                  <button
+                    type="button"
+                    className="draft-item"
+                    key={draft.id}
+                    onClick={() => setSelectedDraft(draft)}
+                    aria-label={`Open ${draft.projectName} draft from ${displayDate(draft.createdAt)}`}
+                  >
+                    <span className="draft-icon">
+                      <FileText size={17} />
+                    </span>
+                    <span className="draft-item-copy">
+                      <strong>{draft.projectName}</strong>
+                      <span>{draft.rawInput}</span>
+                      <small>
+                        <Clock3 size={11} />
+                        {displayDate(draft.createdAt)}{" "}
+                        <span aria-hidden="true">·</span> Marketing kit
+                      </small>
+                    </span>
+                    <ArrowUpRight size={14} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="draft-history-empty">
+                <FileText size={22} strokeWidth={1.3} />
+                <p>Your first kit will find a home here.</p>
+              </div>
+            )}
+          </section>
+
+          <section className="studio-usage">
+            <div>
+              <span>Daily credits</span>
+              <strong>
+                {remainingCredits}
+                <span> / {FAIR_USE_LIMITS.periodCap}</span>
+              </strong>
+            </div>
+            <div
+              className="usage-track"
+              role="meter"
+              aria-label="Credits remaining"
+              aria-valuenow={remainingCredits}
+              aria-valuemin={0}
+              aria-valuemax={FAIR_USE_LIMITS.periodCap}
+            >
+              <span
+                style={{
+                  width: `${(remainingCredits / FAIR_USE_LIMITS.periodCap) * 100}%`,
+                }}
               />
             </div>
-          </div>
-          <div className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-              Projects
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-(--accent-strong)">
-              {projects.length}
-            </p>
-          </div>
-          <div className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-              Recent drafts
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-(--accent-strong)">
-              {logs.length}
-            </p>
-          </div>
-        </section>
+            <p>{formatUsageText(usageCount)}</p>
+            {remainingCredits < 2 && (
+              <p className="credit-warning">
+                A kit needs 2 credits. Credits return as usage leaves the
+                rolling 24-hour window.
+              </p>
+            )}
+          </section>
+          <Link href="/faq" className="sidebar-help">
+            A little guidance <ArrowUpRight size={13} />
+          </Link>
+        </aside>
 
-        <section className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-2xl border bg-white/80 p-4 shadow-[0_12px_40px_rgba(57,74,126,0.1)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-              Build-in-public momentum
-            </p>
-            <h2 className="mt-1 text-lg font-semibold text-foreground">
-              This week&apos;s publishing checklist
-            </h2>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              {BUILD_IN_PUBLIC_CHECKLIST.map((item, index) => {
-                const done = index < checklistCompleted;
-                return (
-                  <div
-                    key={item}
-                    className={`rounded-xl border px-3 py-2 text-sm ${
-                      done
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border-zinc-200 bg-white text-zinc-600"
-                    }`}
-                  >
-                    <p className="font-semibold">{done ? "Done" : "Pending"}</p>
-                    <p className="mt-1">{item}</p>
+        <div className="studio-main">
+          {panel === "generator" ? (
+            <>
+              <section className="studio-composer">
+                <div className="composer-heading">
+                  <span className="composer-step">01</span>
+                  <div>
+                    <h2>What did you ship?</h2>
+                    <p>Rough notes in. A story worth sharing out.</p>
                   </div>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className="gradient-card rounded-2xl border p-4 shadow-[0_12px_40px_rgba(57,74,126,0.12)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
-              Open-source roadmap
-            </p>
-            <p className="mt-2 text-sm text-zinc-700">
-              Help shape FeatureLogs by proposing workflow improvements for builders shipping in public.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href="https://github.com/rexdavinci/featurelogs/issues"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-700"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                Propose feature
-              </Link>
-              <Link
-                href="https://github.com/rexdavinci/featurelogs/pulls"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-700"
-              >
-                <Rocket className="h-3.5 w-3.5" />
-                Explore PRs
-              </Link>
-            </div>
-          </article>
-        </section>
-
-        <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-zinc-300/70 pb-3">
-          <button
-            type="button"
-            onClick={() => switchPanel("generator")}
-            className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-              panel === "generator"
-                ? "bg-(--surface-muted) text-(--accent-strong)"
-                : "bg-white/40 text-zinc-600 hover:bg-white/70"
-            }`}
-          >
-            <Megaphone className="h-3.5 w-3.5" />
-            Marketing Generator
-          </button>
-          <button
-            type="button"
-            onClick={() => switchPanel("templates")}
-            className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-              panel === "templates"
-                ? "bg-(--surface-muted) text-(--accent-strong)"
-                : "bg-white/40 text-zinc-600 hover:bg-white/70"
-            }`}
-          >
-            <WandSparkles className="h-3.5 w-3.5" />
-            Tone & Style Templates
-          </button>
-        </div>
-
-        <section className="grid gap-5 lg:grid-cols-[1.8fr_0.9fr]">
-          <div className="space-y-5">
-            {panel === "generator" ? (
-              <>
-                <article className="surface rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="mt-1 text-2xl font-semibold">
-                        What did you build?
-                      </h2>
-                      <p className="mt-1 text-sm text-zinc-600">
-                        Convert rough commits and notes into polished
-                        distribution content.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mb-4 rounded-2xl border bg-white/80 p-4">
-                    <form
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        if (!onboardingProjectName.trim()) return;
-
-                        const formData = new FormData();
-                        formData.append(
-                          "name",
-                          onboardingProjectName.trim(),
-                        );
-                        startOnboarding(async () => {
-                          const result = await onboardProject(formData);
-                          setOnboardingMessage(
-                            result.ok ? "Project ready." : "",
-                          );
-                          setOnboardingError(
-                            result.ok
-                              ? ""
-                              : (result.error ?? "Could not create project."),
-                          );
-                          if (result.ok) {
-                            setOnboardingProjectName("");
-                            router.refresh();
-                          }
-                        });
-                      }}
-                      className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
-                    >
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                          New Project
-                        </label>
-                        <input
-                          value={onboardingProjectName}
-                          onChange={(event) =>
-                            setOnboardingProjectName(event.target.value)
-                          }
-                          placeholder="Launch notes, product updates, internal name"
-                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isOnboarding || !onboardingProjectName.trim()}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--accent-strong) disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        {isOnboarding ? "Creating..." : "Create Project"}
-                      </button>
-                    </form>
-                    {onboardingMessage ? (
-                      <p className="mt-3 text-sm text-(--accent-strong)">
-                        {onboardingMessage}
-                      </p>
-                    ) : null}
-                    {onboardingError ? (
-                      <p className="mt-3 text-sm text-(--danger)">
-                        {onboardingError}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {!hasProjects ? (
-                    <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-                      Add a project above, then generate your first changelog
-                      package.
-                    </p>
-                  ) : null}
-
-                  <form
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      const formData = new FormData();
-                      formData.append("projectName", selectedProject);
-                      formData.append("rawInput", rawNotes);
-                      setState({ ok: false });
-
-                      startTransition(async () => {
+                  <span className="composer-draft-badge">
+                    {selectedProject?.name ?? "Your next project"}
+                  </span>
+                </div>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (
+                      !selectedProject ||
+                      !rawNotes.trim() ||
+                      remainingCredits < 2
+                    )
+                      return;
+                    const id = selectedProject.id;
+                    const formData = new FormData();
+                    formData.set("projectName", selectedProject.name);
+                    formData.set("rawInput", rawNotes);
+                    setGenerationError("");
+                    startGeneration(async () => {
+                      try {
                         const result = await generatePackage(formData);
-                        setState(result);
-                        if (result.ok) {
-                          setRawNotes("");
-                          setSelectedPreset("");
-                          router.refresh();
+                        if (!result.ok || !result.payload) {
+                          setGenerationError(
+                            result.error ??
+                              "Couldn’t create your kit. Your notes are still here — try again.",
+                          );
+                          return;
                         }
-                      });
-                    }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                        Project Name
+                        setGenerated({
+                          projectId: id,
+                          output: result.payload,
+                          createdAt: new Date().toISOString(),
+                        });
+                        router.refresh();
+                        kitRef.current?.scrollIntoView({
+                          behavior: window.matchMedia(
+                            "(prefers-reduced-motion: reduce)",
+                          ).matches
+                            ? "instant"
+                            : "smooth",
+                          block: "start",
+                        });
+                      } catch {
+                        setGenerationError(
+                          "The connection was interrupted. Your notes are still here — please try again.",
+                        );
+                      }
+                    });
+                  }}
+                >
+                  <label htmlFor="release-notes" className="sr-only">
+                    What did you ship? Release notes
+                  </label>
+                  <textarea
+                    id="release-notes"
+                    className="notes-editor"
+                    required
+                    rows={7}
+                    value={rawNotes}
+                    disabled={isPending}
+                    onChange={(event) => setRawNotes(event.target.value)}
+                    placeholder={
+                      "Added dark mode for late-night builders\nMade the dashboard twice as fast\nFixed that one bug everyone kept reporting…\n\nThe small stuff counts, too."
+                    }
+                  />
+                  <div className="composer-helpers">
+                    <span>
+                      <span className="status-dot" /> Commits, bullet points, or
+                      a brain dump.
+                    </span>
+                    <span>
+                      {rawNotes.trim().length.toLocaleString()} characters
+                    </span>
+                  </div>
+                  <div className="composer-bottom">
+                    <div className="preset-picker">
+                      <label htmlFor="notes-preset">
+                        Need a starting point?
                       </label>
                       <select
-                        name="projectName"
-                        value={selectedProject}
-                        onChange={(event) =>
-                          setSelectedProject(event.target.value)
-                        }
-                        disabled={!hasProjects}
-                        className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent) disabled:cursor-not-allowed disabled:bg-zinc-100"
+                        id="notes-preset"
+                        value={selectedPreset}
+                        disabled={isPending}
+                        onChange={(event) => {
+                          const label = event.target.value;
+                          setSelectedPreset(label);
+                          const preset = PRESETS.find(
+                            (item) => item.label === label,
+                          );
+                          if (preset) setRawNotes(preset.text);
+                        }}
                       >
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.name}>
-                            {project.name}
+                        <option value="">Try an example</option>
+                        {PRESETS.map((preset) => (
+                          <option key={preset.label} value={preset.label}>
+                            {preset.label}
                           </option>
                         ))}
                       </select>
                     </div>
-
-                    <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                          Inspiration Preset <span className="text-zinc-400 lowercase">(optional)</span>
-                        </label>
-                        <select
-                          value={selectedPreset}
-                          onChange={(event) =>
-                            setSelectedPreset(event.target.value)
+                    <div className="generate-action">
+                      <span>5 channels · 2 credits</span>
+                      <button
+                        type="submit"
+                        className="button button-accent"
+                        disabled={
+                          isPending ||
+                          !selectedProject ||
+                          !rawNotes.trim() ||
+                          remainingCredits < 2
+                        }
+                      >
+                        {isPending ? (
+                          <Loader2 className="spin" size={16} />
+                        ) : (
+                          <Sparkles size={16} />
+                        )}
+                        {isPending
+                          ? "Creating your kit…"
+                          : "Generate marketing kit"}
+                        {!isPending && <ArrowRight size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  {!projects.length && (
+                    <p className="workspace-feedback">
+                      First, give your project a name in the sidebar. Then let’s
+                      write its story.
+                    </p>
+                  )}
+                  {generationError && (
+                    <p className="workspace-feedback error" role="alert">
+                      {generationError}
+                    </p>
+                  )}
+                </form>
+              </section>
+              <div ref={kitRef} className="studio-kit-anchor">
+                <MarketingKit
+                  key={`${selectedProjectId}-${currentGenerated?.createdAt ?? newest?.id ?? "empty"}`}
+                  output={output}
+                  projectName={selectedProject?.name ?? "Your project"}
+                  createdAt={currentGenerated?.createdAt ?? newest?.createdAt}
+                  pending={isPending}
+                  monthly={{
+                    text: monthlyText,
+                    error: monthlyError,
+                    pending: isMonthlyPending,
+                    disabled: !logs.length || remainingCredits < 1,
+                    onGenerate: () => {
+                      setMonthlyError("");
+                      startMonthly(async () => {
+                        try {
+                          const result = await generateMonthlyNewsletter();
+                          if (!result.ok) {
+                            setMonthlyError(
+                              result.error ?? "Couldn’t create your recap.",
+                            );
+                            return;
                           }
-                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                        >
-                          <option value="">Select a preset...</option>
-                          {PRESETS.map((preset) => (
-                            <option key={preset.label} value={preset.label}>
-                              {preset.label}
-                            </option>
-                          ))}
-                        </select>
+                          setMonthlyText(result.text ?? "");
+                          router.refresh();
+                        } catch {
+                          setMonthlyError(
+                            "Couldn’t create your recap. Please try again.",
+                          );
+                        }
+                      });
+                    },
+                  }}
+                />
+              </div>
+              {output && (
+                <p className="studio-saved-note">
+                  <Check size={14} />
+                  {projectLogs.length
+                    ? "Your saved kits are always a click away in Latest drafts."
+                    : "Your kit has been saved. Keep building."}
+                </p>
+              )}
+            </>
+          ) : (
+            <section className="voice-studio">
+              <div className="voice-studio-heading">
+                <span className="workspace-eyebrow">
+                  <WandSparkles size={13} /> YOUR WORDS, WITH YOUR PERSONALITY
+                </span>
+                <h2>Make it sound like you.</h2>
+                <p>
+                  A consistent voice for{" "}
+                  {selectedProject?.name ?? "your project"}, from the smallest
+                  fix to the biggest launch.
+                </p>
+              </div>
+              {!selectedProject ? (
+                <div className="kit-empty">
+                  <Folder size={28} />
+                  <h3>A voice needs a project.</h3>
+                  <p>Create your first project to make its voice your own.</p>
+                </div>
+              ) : isLoadingTemplates ? (
+                <p className="workspace-feedback" role="status">
+                  <Loader2 className="spin" size={16} /> Loading your project’s
+                  voice…
+                </p>
+              ) : templateError ? (
+                <p className="workspace-feedback error" role="alert">
+                  {templateError}
+                </p>
+              ) : (
+                <>
+                  <div
+                    className="voice-channel-picker"
+                    aria-label="Voice settings channels"
+                  >
+                    {TEMPLATE_ORDER.map((key) => (
+                      <button
+                        type="button"
+                        key={key}
+                        aria-pressed={activeTemplate === key}
+                        onClick={() => setActiveTemplate(key)}
+                      >
+                        {key === "twitter" ? "X thread" : templates[key].label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="voice-form">
+                    <div className="voice-form-heading">
+                      <div>
+                        <h3>
+                          {activeTemplate === "twitter"
+                            ? "X thread"
+                            : currentTemplate.label}
+                        </h3>
+                        <p>
+                          Give the AI a direction. Keep the personality yours.
+                        </p>
                       </div>
                       <button
                         type="button"
-                        onClick={applyPreset}
-                        disabled={!selectedPreset}
-                        className="inline-flex items-center justify-center gap-1 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="kit-action"
+                        disabled={isSaving}
+                        onClick={() => {
+                          setTemplateCache((cache) => ({
+                            ...cache,
+                            [selectedProjectId]: {
+                              ...templates,
+                              [activeTemplate]:
+                                DEFAULT_STYLE_TEMPLATES[activeTemplate],
+                            },
+                          }));
+                          setTemplateFeedback(
+                            "Default values restored for this channel. Save to apply them.",
+                          );
+                        }}
                       >
-                        {/* <Sparkles className="h-3.5 w-3.5" /> */}
-                        Apply Preset
+                        <RotateCcw size={13} /> Reset channel
                       </button>
                     </div>
-
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                        Raw Notes
-                      </label>
-                      <textarea
-                        name="rawInput"
-                        required
-                        rows={8}
-                        value={rawNotes}
-                        onChange={(event) => setRawNotes(event.target.value)}
-                        placeholder="Paste git logs, feature notes, bug fixes, and release bullets..."
-                        className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                      />
-                    </div>
-
-                    {state.error ? (
-                      <p className="max-h-40 overflow-y-auto rounded-xl border border-(--danger)/40 bg-(--danger)/10 p-3 text-sm text-(--danger) break-all whitespace-pre-wrap">
-                        {state.error}
-                      </p>
-                    ) : null}
-
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      {/* <p className="text-xs text-zinc-500">Fair-use window: {formatUsageText(usageCount)}.</p> */}
+                    <label htmlFor="voice-tone">
+                      Writing tone<span>How should your updates feel?</span>
+                    </label>
+                    <textarea
+                      id="voice-tone"
+                      rows={3}
+                      disabled={isSaving}
+                      value={currentTemplate.tone}
+                      onChange={(event) =>
+                        updateTemplate("tone", event.target.value)
+                      }
+                    />
+                    <label htmlFor="voice-cta">
+                      Call to action
+                      <span>What would you like your audience to do next?</span>
+                    </label>
+                    <textarea
+                      id="voice-cta"
+                      rows={2}
+                      disabled={isSaving}
+                      value={currentTemplate.cta}
+                      onChange={(event) =>
+                        updateTemplate("cta", event.target.value)
+                      }
+                    />
+                    <label htmlFor="voice-hashtags">
+                      Your go-to hashtags
+                      <span>
+                        Optional. A little discoverability goes a long way.
+                      </span>
+                    </label>
+                    <input
+                      id="voice-hashtags"
+                      disabled={isSaving}
+                      value={currentTemplate.hashtags ?? ""}
+                      onChange={(event) =>
+                        updateTemplate("hashtags", event.target.value)
+                      }
+                    />
+                    <div className="voice-save-row">
+                      <p>Applies to future kits. Saving uses 1 credit.</p>
                       <button
-                        type="submit"
-                        disabled={isPending || !hasProjects || !selectedProject}
-                        className="rounded-xl bg-(--accent) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--accent-strong) disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isPending
-                          ? "Analyzing Pipeline..."
-                          : "Generate Marketing Kit"}
-                      </button>
-                    </div>
-                  </form>
-                </article>
-
-                <article className="surface max-h-[72vh] overflow-y-auto rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-                  <p className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-                    Distribution Hub
-                  </p>
-                  <Tabs.Root defaultValue="changelog" className="space-y-4">
-                    <Tabs.List className="grid grid-cols-2 gap-2 rounded-xl border p-1 md:grid-cols-3">
-                      <Tabs.Trigger
-                        value="changelog"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <ScrollText className="h-3.5 w-3.5" />
-                        Public Changelog
-                      </Tabs.Trigger>
-                      <Tabs.Trigger
-                        value="twitter"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        Twitter Thread
-                      </Tabs.Trigger>
-                      <Tabs.Trigger
-                        value="linkedin"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <Link2 className="h-3.5 w-3.5" />
-                        LinkedIn Post
-                      </Tabs.Trigger>
-                      <Tabs.Trigger
-                        value="faq"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <CircleHelp className="h-3.5 w-3.5" />
-                        Help Center FAQ
-                      </Tabs.Trigger>
-                      <Tabs.Trigger
-                        value="email"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <Mail className="h-3.5 w-3.5" />
-                        Email Newsletter
-                      </Tabs.Trigger>
-                      <Tabs.Trigger
-                        value="monthly"
-                        className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold data-[state=active]:bg-(--surface-muted)"
-                      >
-                        <Newspaper className="h-3.5 w-3.5" />
-                        Monthly Newsletter
-                      </Tabs.Trigger>
-                    </Tabs.List>
-
-                    <Tabs.Content value="changelog" className="space-y-3">
-                      <div className="surface-muted min-h-44 rounded-xl border p-4 text-sm whitespace-pre-wrap">
-                        {output?.changelog ??
-                          "Generate content to preview your changelog here."}
-                      </div>
-                      <CopyButton value={output?.changelog ?? ""} />
-                    </Tabs.Content>
-
-                    <Tabs.Content value="twitter" className="space-y-3">
-                      <div className="space-y-2 max-h-55 overflow-y-auto">
-                        {tweets.map((tweet, idx) => (
-                          <div
-                            key={idx}
-                            className="surface-muted rounded-xl border p-3 text-sm"
-                          >
-                            <p className="mb-2 font-mono text-xs text-zinc-500">
-                              Message {idx + 1}/{tweets.length}
-                            </p>
-                            <p className="whitespace-pre-wrap">{tweet}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <CopyButton value={output?.twitter ?? ""} />
-                        <a
-                          href={`https://x.com/intent/tweet?text=${encodeURIComponent(tweets[0] ?? "")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                          Share On X
-                        </a>
-                      </div>
-                    </Tabs.Content>
-
-                    <Tabs.Content value="linkedin" className="space-y-3">
-                      <div className="rounded-xl border overflow-y-auto h-55">
-                        <div className="surface-muted p-4 text-sm whitespace-pre-wrap">
-                          {output?.linkedin ??
-                            "Generate content to preview your LinkedIn post here."}
-                        </div>
-                      </div>
-                      <CopyButton value={output?.linkedin ?? ""} />
-                    </Tabs.Content>
-
-                    <Tabs.Content value="faq" className="space-y-3">
-                      <div className="rounded-xl border overflow-y-auto h-55">
-                        <div className="surface-muted p-4 text-sm whitespace-pre-wrap">
-                          {output?.helpFaq ??
-                            "Generate a marketing kit to produce Help Center FAQ content."}
-                        </div>
-                      </div>
-                      <CopyButton value={output?.helpFaq ?? ""} />
-                    </Tabs.Content>
-
-                    <Tabs.Content value="email" className="space-y-3">
-                      <div className="rounded-xl border h-55 overflow-y-auto">
-                        <div className="surface-muted p-4 text-sm whitespace-pre-wrap">
-                          {output?.emailNewsletter ??
-                            "Generate a marketing kit to produce Email Newsletter content."}
-                        </div>
-                      </div>
-                      <CopyButton value={output?.emailNewsletter ?? ""} />
-                    </Tabs.Content>
-
-                    <Tabs.Content value="monthly" className="space-y-3">
-                      <div className="relative rounded-xl border h-55 overflow-y-auto">
-                        <div className="surface-muted min-h-44 p-4 text-sm whitespace-pre-wrap">
-                          {monthlyText ||
-                            "Generate your month-end newsletter from all changelogs with one click."}
-                        </div>
-                        {!monthlyText ? (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/55">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setMonthlyError("");
-                                startMonthly(async () => {
-                                  const result =
-                                    await generateMonthlyNewsletter();
-                                  if (!result.ok) {
-                                    setMonthlyError(
-                                      result.error ??
-                                        "Could not generate monthly newsletter.",
-                                    );
-                                    return;
-                                  }
-                                  setMonthlyText(result.text ?? "");
-                                  router.refresh();
-                                });
-                              }}
-                              className="rounded-lg bg-(--accent) px-3 py-2 text-xs font-semibold text-white hover:bg-(--accent-strong) disabled:opacity-60"
-                              disabled={isMonthlyPending}
-                            >
-                              {isMonthlyPending
-                                ? "Generating Monthly Recap..."
-                                : "Generate Monthly Newsletter"}
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
-                      {monthlyError ? (
-                        <p className="max-h-40 overflow-y-auto rounded-xl border border-(--danger)/40 bg-(--danger)/10 p-3 text-sm text-(--danger) break-all whitespace-pre-wrap">
-                          {monthlyError}
-                        </p>
-                      ) : null}
-                      {monthlyText ? <CopyButton value={monthlyText} /> : null}
-                    </Tabs.Content>
-                  </Tabs.Root>
-                </article>
-              </>
-            ) : (
-              <article className="surface rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-mono text-xs uppercase tracking-[0.16em] text-zinc-500">
-                      Tone & Style Templates
-                    </p>
-                    <h2 className="mt-1 text-2xl font-semibold">
-                      Style guides and reusable voice
-                    </h2>
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Fine-tune tone, CTA, and hashtags for each output type.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTemplates(DEFAULT_STYLE_TEMPLATES);
-                      setTemplateFeedback("Restored default template values.");
-                    }}
-                    className="rounded-lg border bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                  >
-                    Restore Defaults
-                  </button>
-                </div>
-
-                <div className="grid gap-5 lg:grid-cols-[0.9fr_1.6fr]">
-                  <div className="space-y-2">
-                    {TEMPLATE_ORDER.map((key) => {
-                      const item = templates[key];
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => setActiveTemplate(key)}
-                          className={`w-full rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                            activeTemplate === key
-                              ? "bg-(--surface-muted) text-(--accent-strong)"
-                              : "bg-white/70 text-zinc-700 hover:bg-white"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2 cursor-pointer">
-                            <span>{item.label}</span>
-                            {/* <span className="rounded-full bg-(--surface-muted) px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-600">
-                              Editable
-                            </span> */}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border bg-white/80 p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {currentTemplate.label}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            Selected template
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setTemplateFeedback(
-                              `Loaded ${currentTemplate.label}.`,
-                            )
-                          }
-                          className="inline-flex items-center gap-1 rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          Focus Template
-                        </button>
-                      </div>
-
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <label className="space-y-2 text-sm">
-                          <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                            Tone
-                          </span>
-                          <textarea
-                            rows={5}
-                            value={currentTemplate.tone}
-                            onChange={(event) =>
-                              updateTemplateField("tone", event.target.value)
-                            }
-                            className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                          />
-                        </label>
-                        <label className="space-y-2 text-sm">
-                          <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                            CTA
-                          </span>
-                          <textarea
-                            rows={5}
-                            value={currentTemplate.cta}
-                            onChange={(event) =>
-                              updateTemplateField("cta", event.target.value)
-                            }
-                            className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                          />
-                        </label>
-                        <label className="space-y-2 text-sm">
-                          <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                            Hashtags
-                          </span>
-                          <textarea
-                            rows={5}
-                            value={currentTemplate.hashtags}
-                            onChange={(event) =>
-                              updateTemplateField(
-                                "hashtags",
-                                event.target.value,
-                              )
-                            }
-                            className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none focus:border-(--accent)"
-                          />
-                        </label>
-                      </div>
-
-                      {templateFeedback ? (
-                        <p className="mt-4 rounded-xl border border-(--accent)/30 bg-(--accent)/10 p-3 text-sm text-(--accent-strong)">
-                          {templateFeedback}
-                        </p>
-                      ) : null}
-
-                      <div className="mt-4 flex items-center justify-between gap-3">
-                        <p className="text-xs text-zinc-500">
-                          Save reusable template settings for the selected
-                          project.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!selectedProject) return;
-                            startSaving(async () => {
+                        type="button"
+                        className="button button-accent"
+                        disabled={isSaving || remainingCredits < 1}
+                        onClick={() => {
+                          const id = selectedProjectId;
+                          setTemplateFeedback("");
+                          startSaving(async () => {
+                            try {
                               const result = await saveStyleTemplates(
                                 templates,
-                                selectedProjectRecord?.id ?? "",
+                                id,
                               );
                               setTemplateFeedback(
                                 result.ok
-                                  ? "Saved template settings for this project."
+                                  ? "Voice settings saved. Your next kit will use them."
                                   : (result.error ??
-                                      "Could not save templates."),
+                                      "Couldn’t save your settings."),
                               );
                               if (result.ok) router.refresh();
-                            });
-                          }}
-                          disabled={isSaving || !selectedProject}
-                          className="rounded-xl bg-(--accent) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--accent-strong) disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isSaving ? "Saving..." : "Save Templates"}
-                        </button>
-                      </div>
+                            } catch {
+                              setTemplateFeedback(
+                                "Couldn’t save your settings. Please try again.",
+                              );
+                            }
+                          });
+                        }}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="spin" size={15} />
+                        ) : (
+                          <Check size={15} />
+                        )}
+                        {isSaving ? "Saving…" : "Save voice settings"}
+                      </button>
                     </div>
+                    {templateFeedback && (
+                      <p className="workspace-feedback" role="status">
+                        {templateFeedback}
+                      </p>
+                    )}
                   </div>
-                </div>
-              </article>
-            )}
-          </div>
-
-          <aside className="space-y-5 lg:sticky lg:top-8 lg:h-fit">
-            <article className="surface rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">
-                  Workspace note
-                </h2>
-                <span className="inline-flex items-center gap-1 rounded-full border bg-white px-2.5 py-1 text-[11px] font-semibold text-(--accent-strong)">
-                  <Plus className="h-3.5 w-3.5" />
-                  Local workspace
-                </span>
-              </div>
-
-              <p className="text-sm leading-7 text-zinc-700">
-                Create a project, generate release copy, and save reusable voice
-                settings without signing in.
-              </p>
-
-              <div className="mt-4 rounded-2xl border bg-(--surface-muted) p-4 text-sm text-zinc-700">
-                <p className="font-semibold text-foreground">
-                  How it stores data
-                </p>
-                <p className="mt-2 leading-7">
-                  Your projects, drafts, and templates are stored in Firestore
-                  under your local visitor session.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href="/faq"
-                    className="inline-flex rounded-lg border bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                  >
-                    <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-                    FAQ
-                  </Link>
-                  <Link
-                    href="/terms"
-                    className="inline-flex rounded-lg border bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                  >
-                    <Rocket className="mr-1.5 h-3.5 w-3.5" />
-                    Terms
-                  </Link>
-                </div>
-              </div>
-            </article>
-
-            <article className="surface rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-                Recent projects
-              </p>
-              <div className="mt-3 space-y-2">
-                {projects.length ? (
-                  projects.slice(0, 4).map((project) => (
-                    <div
-                      key={project.id}
-                      className="rounded-xl border bg-white px-3 py-2 text-sm text-zinc-700"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span>{project.name}</span>
-                        <span className="text-xs text-zinc-500">
-                          {formatDate(project.updatedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-zinc-600">
-                    Add your first project to get started.
-                  </p>
-                )}
-              </div>
-            </article>
-
-            <article className="surface rounded-2xl border p-5 shadow-[0_12px_40px_rgba(59,45,28,0.08)]">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-                    Latest drafts
-                  </p>
-                  <h3 className="mt-1 text-lg font-semibold">Recent outputs</h3>
-                </div>
-                <Clock3 className="h-4 w-4 text-(--accent-strong)" />
-              </div>
-              <div className="space-y-3">
-                {latestThree.length ? (
-                  latestThree.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl border bg-white/80 p-3 text-sm text-zinc-700"
-                    >
-                      <p className="font-semibold text-foreground">
-                        {item.projectName}
-                      </p>
-                      <p className="mt-1 line-clamp-3 text-zinc-600">
-                        {item.rawInput}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-zinc-600">
-                    Generated content will show up here.
-                  </p>
-                )}
-              </div>
-            </article>
-          </aside>
-        </section>
+                </>
+              )}
+            </section>
+          )}
+        </div>
       </div>
+      {selectedDraft && (
+        <DraftModal
+          key={selectedDraft.id}
+          draft={selectedDraft}
+          onClose={() => setSelectedDraft(null)}
+        />
+      )}
     </main>
   );
 }

@@ -34,18 +34,18 @@ const USE_CASES = [
 
 export default function UseCasesPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 sm:py-8">
-      <div className="relative mx-auto w-full max-w-5xl space-y-5">
+    <main className="content-shell">
+      <div className="space-y-8">
         <Header />
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-(--text-muted)">
           FeatureLogs Use Cases
         </p>
         <h1 className="mt-2 text-4xl font-semibold text-foreground">
-          Practical Workflows for Product Marketing Automation
+          A small update. So many ways to share it.
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-700">
-          These pages explain how teams use FeatureLogs to scale build-in-public
-          communication with consistent, high-quality content.
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-(--text-secondary)">
+          From a tiny fix to your next big release, find a workflow that helps you
+          bring your audience along.
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -53,15 +53,15 @@ export default function UseCasesPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-2xl border bg-white/80 p-4 hover:bg-zinc-50"
+              className="rounded-2xl border bg-(--surface) p-4 hover:bg-(--surface-muted)"
             >
               <h2 className="text-lg font-semibold text-foreground">{item.title}</h2>
-              <p className="mt-1 text-sm leading-6 text-zinc-600">{item.summary}</p>
+              <p className="mt-1 text-sm leading-6 text-(--text-muted)">{item.summary}</p>
             </Link>
           ))}
         </div>
 
-        <p className="mt-6 text-sm text-zinc-600">
+        <p className="mt-6 text-sm text-(--text-muted)">
           Looking for setup help? Read the{" "}
           <Link href="/faq" className="font-semibold text-(--accent-strong) underline underline-offset-2">
             FAQ

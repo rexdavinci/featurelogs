@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   description:
     "Turn rough product updates into polished changelogs, X threads, LinkedIn posts, FAQs, and newsletters.",
   applicationName: "FeatureLogs",
+  icons: { icon: "/feature-logs.svg", apple: "/apple-touch-icon.png" },
   keywords: [
     "build in public",
     "changelog generator",
@@ -75,9 +76,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${sora.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t;try{t=localStorage.getItem('featurelogs-theme')}catch(e){}document.documentElement.dataset.theme=t==='light'||t==='dark'?t:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <div className="flex-1">{children}</div>
         <Footer />
