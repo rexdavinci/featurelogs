@@ -7,7 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  ChevronDown,
   Clock3,
   FileText,
   Folder,
@@ -33,6 +32,7 @@ import {
   type KitOutput,
 } from "../components/MarketingKit";
 import { DraftModal } from "../components/DraftModal";
+import { ProjectPicker } from "../components/ProjectPicker";
 import {
   generateMonthlyNewsletter,
   generatePackage,
@@ -180,30 +180,14 @@ export default function DashboardClient({
                 <Plus size={17} />
               </button>
             </div>
-            <label className="sr-only" htmlFor="studio-project">
-              Selected project
-            </label>
-            <div className="project-select-wrap">
-              <Folder size={17} />
-              <select
-                id="studio-project"
-                value={selectedProjectId}
-                disabled={
-                  !projects.length || isPending || isSaving || isOnboarding
-                }
-                onChange={(event) => selectProject(event.target.value)}
-              >
-                {!projects.length && (
-                  <option value="">Create your first project</option>
-                )}
-                {projects.map((project) => (
-                  <option value={project.id} key={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={15} />
-            </div>
+            <ProjectPicker
+              projects={projects}
+              value={selectedProjectId}
+              disabled={
+                !projects.length || isPending || isSaving || isOnboarding
+              }
+              onChange={selectProject}
+            />
             {showProjectForm && (
               <form
                 className="new-project-form"

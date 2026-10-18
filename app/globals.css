@@ -8,7 +8,7 @@
   --border: #e6e5df;
   --accent: #c34a25;
   --accent-strong: #ad3c1b;
-  --accent-soft: var(--accent-soft);
+  --accent-soft: #f8e9df;
   --hope: #42755d;
   --danger: #b42318;
   --text-secondary: #4e554b;
@@ -1473,38 +1473,90 @@ html[data-theme="dark"] .footnote-line {
   border: none;
   background: transparent;
 }
-.project-select-wrap {
+/* Keep the project menu inside the app's theme instead of the OS select popup. */
+.project-picker {
+  position: relative;
+  margin-top: 12px;
+  min-width: 0;
+}
+.project-picker-trigger {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
   background: var(--surface);
-  padding: 11px 12px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  margin-top: 12px;
+  color: var(--foreground);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.project-picker-trigger > svg:first-child {
   color: var(--accent);
 }
-.project-select-wrap select {
-  width: 100%;
-  appearance: none;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 500;
-  outline: none;
-  background: transparent;
-  color: var(--foreground);
-  text-overflow: ellipsis;
-}
-.project-select-wrap select:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.project-select-wrap > svg {
+.project-picker-trigger svg,
+.project-picker-options svg {
   flex-shrink: 0;
 }
-.project-select-wrap > svg:last-child {
+.project-picker-trigger span,
+.project-picker-options span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-picker-trigger > svg:last-child {
   color: var(--text-muted);
-  pointer-events: none;
+}
+.project-picker-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.project-picker-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.project-picker-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 5px;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px #0003;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.project-picker-options button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 11px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.project-picker-options button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.project-picker-options button:hover,
+.project-picker-options button:focus-visible {
+  background: var(--surface-muted);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .new-project-form {
   margin-top: 15px;
