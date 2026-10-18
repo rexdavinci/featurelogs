@@ -18,7 +18,7 @@ import {
   loadTemplates,
   saveLog,
   saveTemplates,
-} from "@/utils/firestore";
+} from "@/lib/db/server";
 import { getSessionUser } from "@/utils/session";
 import { assertRateLimit } from "@/utils/rate-limit";
 

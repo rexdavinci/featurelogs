@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/app/components/Header";
-import { loadPublicRanking } from "@/utils/firestore";
+import { loadPublicRanking } from "@/lib/db/server";
 import { getSessionUser } from "@/utils/session";
 import { Trophy, ArrowRight, Sparkles, Flame, Medal } from "lucide-react";
 

@@ -9,7 +9,7 @@ import { getSessionUser } from "@/utils/session";
 export const metadata: Metadata = {
   title: "FeatureLogs",
   description:
-    "Open-source release note and social content generator with Firestore storage and fair-use rate limits.",
+    "Open-source release note and social content generator with Neon-ready storage and fair-use rate limits.",
   alternates: {
     canonical: "/",
   },
@@ -61,7 +61,7 @@ export default async function Home() {
                 Stay visible.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-zinc-700 md:text-lg">
-                FeatureLogs turns raw release notes into changelogs, social posts, help docs, and newsletters. It stores your workspace in Firestore, rate-limits abuse with Redis, and keeps the flow simple enough to self-host.
+                FeatureLogs turns raw release notes into changelogs, social posts, help docs, and newsletters. It stores your workspace in Neon or Firestore via an adapter, rate-limits abuse with Redis, and keeps the flow simple enough to self-host.
               </p>
             </div>
 
@@ -86,7 +86,7 @@ export default async function Home() {
               {[
                 ["Secure Login", "Manage your own projects, changelogs, and content templates safely."],
                 ["Fair use", "Upstash-backed rate limits keep the service healthy."],
-                ["Firestore storage", "Projects, templates, and drafts stay in Google Firestore."],
+                ["Flexible storage", "Projects, templates, and drafts run through a DB adapter layer."],
               ].map(([title, body]) => (
                 <div key={title} className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
                   <p className="text-sm font-semibold text-foreground">{title}</p>

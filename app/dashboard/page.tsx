@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardClient from "./dashboard-client";
-import { loadDashboardSnapshot } from "@/utils/firestore";
+import { loadDashboardSnapshot } from "@/lib/db/server";
 import { getSessionUser } from "@/utils/session";
 
 export const metadata: Metadata = {

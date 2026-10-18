@@ -2,14 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FirebaseError } from "firebase/app";
-import { useAuth } from "@/lib/context/auth";
-import { loginUserAction } from "@/app/login/actions";
+import { loginUserAction, signupUserAction } from "@/app/login/actions";
 import { KeyRound, Mail, Loader2, AlertCircle } from "lucide-react";
 
 export function AuthCard() {
   const router = useRouter();
-  const { loginWithEmail, signupWithEmail } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -34,32 +31,10 @@ export function AuthCard() {
 
     startTransition(async () => {
       try {
-        let userCredential;
-        if (mode === "login") {
-          userCredential = await loginWithEmail(email, password);
-        } else {
-          userCredential = await signupWithEmail(email, password);
-        }
-
-        if (userCredential === null) {
-          setError("Authentication failed. Please try again.");
-          return;
-        }
-
-        const user = userCredential.user;
-        if (!user) {
-          setError("User not found after authentication.");
-          return;
-        }
-
-        // const emailVerified = user.emailVerified;
-        // if (!emailVerified) {
-        //   setError("Please verify your email before logging in.");
-        //   return;
-        // }
-
-        const idToken = await userCredential.user.getIdToken();
-        const res = await loginUserAction(idToken);
+        const res =
+          mode === "login"
+            ? await loginUserAction(email, password)
+            : await signupUserAction(email, password);
 
         if (!res.ok) {
           setError(res.error || "Failed to establish server session.");
@@ -78,20 +53,7 @@ export function AuthCard() {
         router.push("/dashboard");
       } catch (err: unknown) {
         console.error(err);
-        const errorCode = err instanceof FirebaseError ? err.code : "";
-        let msg = "An authentication error occurred.";
-        if (
-          errorCode === "auth/user-not-found" ||
-          errorCode === "auth/wrong-password" ||
-          errorCode === "auth/invalid-credential"
-        ) {
-          msg = "Invalid email or password.";
-        } else if (errorCode === "auth/email-already-in-use") {
-          msg = "This email is already registered.";
-        } else if (errorCode === "auth/invalid-email") {
-          msg = "Please enter a valid email address.";
-        }
-        setError(msg);
+        setError("An authentication error occurred.");
       }
     });
   };

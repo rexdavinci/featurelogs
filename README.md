@@ -13,7 +13,8 @@ It turns raw product updates into:
 ## Stack
 
 - Next.js App Router + TypeScript + Tailwind CSS
-- Google Firestore for workspace storage
+- Database adapter layer (`lib/db/*`) with Firestore and Neon implementations
+- Auth adapter layer (`lib/auth/*`) with Neon session auth implementation
 - Upstash Redis for abuse prevention
 - OpenAI generation (with fallback mode when API key is missing)
 
@@ -32,6 +33,9 @@ Recommended SEO variables:
 
 Required backend variables:
 
+- `DB_PROVIDER` (`firestore` or `neon`)
+- `AUTH_PROVIDER` (`neon` or `firebase`; password login/signup currently implemented for `neon`)
+- `DATABASE_URL` (required when `DB_PROVIDER=neon`)
 - `FIREBASE_PROJECT_ID`
 - `FIREBASE_SERVICE_ACCOUNT_KEY_PATH` (path to your local service account JSON, for example `./firebase-service-account.json`)
 - `UPSTASH_REDIS_REST_URL`
@@ -41,6 +45,7 @@ Required backend variables:
 
 Required client Firebase variables:
 
+- `NEXT_PUBLIC_DB_PROVIDER` (`firestore` by default)
 - `NEXT_PUBLIC_FIREBASE_API_KEY`
 - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
 - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
@@ -56,6 +61,12 @@ npm install
 npm run dev
 ```
 
+When running with Neon:
+
+```bash
+DB_PROVIDER=neon npm run dev
+```
+
 Open http://localhost:3000
 
 ## Production Check
@@ -63,6 +74,22 @@ Open http://localhost:3000
 ```bash
 npm run build
 ```
+
+## Drizzle (Neon)
+
+Generate SQL migrations from schema changes:
+
+```bash
+npm run db:generate
+```
+
+Apply generated migrations:
+
+```bash
+npm run db:migrate
+```
+
+Auth sessions are provider-driven via the auth adapter. Neon auth uses `auth_users` and `auth_sessions`.
 
 ## Firebase and Redis Setup
 

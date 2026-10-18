@@ -10,7 +10,6 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth, googleProvider, isFirebaseConfigured } from "@/utils/firebase";
-import { getUserProfile, createUserProfile } from "../db-service";
 import { UserProfile } from "@/lib/types";
 
 interface AuthContextType {
@@ -44,15 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
         try {
           if (fbUser) {
-            const profile = await getUserProfile(fbUser.uid);
-            if (profile) {
-              setUser(profile);
-            } else {
-              // Create dynamic profile
-              const newProfile = generateUser(fbUser.email || "", fbUser.uid);
-              await createUserProfile(newProfile);
-              setUser(newProfile);
-            }
+            setUser(generateUser(fbUser.email || "", fbUser.uid));
           } else {
             setUser(null);
           }
@@ -86,9 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email,
           password,
         );
-        const newProfile = generateUser(email, credential.user.uid);
-        await createUserProfile(newProfile);
-        setUser(newProfile);
+        setUser(generateUser(email, credential.user.uid));
         return credential;
       } catch (error) {
         console.error("Signup error:", error);
@@ -100,13 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = async () => {
     if (isFirebaseConfigured) {
       const credential = await signInWithPopup(auth, googleProvider);
-
-      const newProfile = generateUser(
-        credential.user.email || "",
-        credential.user.uid,
-      );
-      await createUserProfile(newProfile);
-      setUser(newProfile);
+      setUser(generateUser(credential.user.email || "", credential.user.uid));
     }
   };
 

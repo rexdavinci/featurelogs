@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { adminAuth } from "./firebase-admin";
+import { getAuthSessionUser, revokeAuthSession } from "@/lib/auth/server";
 
 export const SESSION_COOKIE = "featurelogs_session";
 
@@ -9,26 +9,18 @@ export async function getSessionUser() {
   if (!token) return null;
 
   try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    return {
-      uid: decoded.uid,
-      email: decoded.email,
-    };
+    return await getAuthSessionUser(token);
   } catch {
-    try {
-      const decoded = await adminAuth.verifySessionCookie(token, true);
-      return {
-        uid: decoded.uid,
-        email: decoded.email,
-      };
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 
 export async function destroySession() {
   const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  if (token) {
+    await revokeAuthSession(token);
+  }
   cookieStore.delete(SESSION_COOKIE);
 }
 

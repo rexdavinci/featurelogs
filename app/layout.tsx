@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/context/auth";
 import { getSiteUrl } from "../utils/seo";
 import { Footer } from "@/components/Footer";
 
@@ -80,10 +79,8 @@ export default function RootLayout({
       className={`${sora.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </AuthProvider>
+        <div className="flex-1">{children}</div>
+        <Footer />
       </body>
     </html>
   );

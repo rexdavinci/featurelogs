@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: {
       headers: request.headers,
