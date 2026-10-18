@@ -1,8 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight, BadgeCheck, Bolt, BookOpen, Sparkles, Wand2 } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Bolt,
+  CalendarClock,
+  Megaphone,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
 import { Header } from "./components/Header";
 import { AuthCard } from "./components/AuthCard";
+import { RoadmapBoard } from "./components/RoadmapBoard";
 import { getSiteUrl } from "@/utils/seo";
 import { getSessionUser } from "@/utils/session";
 
@@ -14,6 +23,39 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 };
+
+const OPEN_SOURCE_VALUES = [
+  {
+    title: "Practical over hype",
+    body: "Shippable tools for teams posting real updates, not vanity metrics.",
+    icon: BadgeCheck,
+  },
+  {
+    title: "Community roadmap",
+    body: "Feature priorities evolve through issues and contributor feedback.",
+    icon: Megaphone,
+  },
+  {
+    title: "Built to iterate",
+    body: "Adapter-driven architecture to swap infra without rewriting product logic.",
+    icon: Bolt,
+  },
+];
+
+const FLOW_STEPS = [
+  {
+    title: "Capture your progress",
+    body: "Paste rough release notes, commits, or bullet points right after shipping.",
+  },
+  {
+    title: "Generate multi-channel updates",
+    body: "Create changelog, social, FAQ, and newsletter drafts in one run.",
+  },
+  {
+    title: "Publish consistently",
+    body: "Keep your audience in sync and maintain your build-in-public momentum.",
+  },
+];
 
 export default async function Home() {
   const siteUrl = getSiteUrl();
@@ -45,127 +87,144 @@ export default async function Home() {
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6">
         <Header userEmail={user?.email} />
 
-        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-white/75 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-(--accent-strong)">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-(--accent-strong)">
               <Sparkles className="h-3.5 w-3.5" />
-              Open-source release
+              Build-in-public command center
             </div>
 
             <div className="space-y-4">
               <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] text-foreground md:text-6xl">
-                Ship updates.
+                Turn shipping updates
                 <br />
-                Write less.
-                <br />
-                Stay visible.
+                into a <span className="text-gradient">growth habit.</span>
               </h1>
               <p className="max-w-2xl text-base leading-7 text-zinc-700 md:text-lg">
-                FeatureLogs turns raw release notes into changelogs, social posts, help docs, and newsletters. It stores your workspace in Neon or Firestore via an adapter, rate-limits abuse with Redis, and keeps the flow simple enough to self-host.
+                FeatureLogs helps builders stay visible after every release with changelog,
+                social, and support-ready content — designed for teams building in public.
               </p>
             </div>
 
-            {/* <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
-                href="/dashboard"
+                href={user ? "/dashboard" : "#auth-card"}
                 className="inline-flex items-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-white transition hover:bg-(--accent-strong)"
               >
-                Open Dashboard
+                {user ? "Open Dashboard" : "Start Writing Better Updates"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/faq"
-                className="inline-flex items-center gap-2 rounded-xl border bg-white/80 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-white"
+                href="https://github.com/rexdavinci/featurelogs/issues"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white/80 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-white"
               >
-                <BookOpen className="h-4 w-4" />
-                Read FAQ
+                Shape the roadmap
               </Link>
-            </div> */}
+            </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                ["Secure Login", "Manage your own projects, changelogs, and content templates safely."],
-                ["Fair use", "Upstash-backed rate limits keep the service healthy."],
-                ["Flexible storage", "Projects, templates, and drafts run through a DB adapter layer."],
-              ].map(([title, body]) => (
-                <div key={title} className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
-                  <p className="text-sm font-semibold text-foreground">{title}</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
-                </div>
-              ))}
+              {OPEN_SOURCE_VALUES.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(57,74,126,0.1)]"
+                  >
+                    <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                      <Icon className="h-3.5 w-3.5 text-(--accent)" />
+                      {item.title}
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-zinc-700">{item.body}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          <div>
+          <div className="space-y-4">
             {user ? (
-              <div className="glass rounded-3xl border p-5 shadow-[0_24px_80px_rgba(44,30,11,0.16)] sm:p-6">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="mt-4 rounded-2xl border bg-(--surface-muted) p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Logged In</p>
-                  <p className="mt-2 text-sm leading-7 text-zinc-700">
-                    Welcome back, <strong className="text-zinc-900">{user.email}</strong>! You can now access your control center.
-                  </p>
+              <article className="glass gradient-card rounded-3xl border p-5 shadow-[0_24px_80px_rgba(44,30,11,0.16)] sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                  Welcome back
+                </p>
+                <p className="mt-2 text-base leading-7 text-zinc-700">
+                  You are signed in as <strong className="text-zinc-900">{user.email}</strong>. Ready to turn this week’s commits into updates your audience can actually understand.
+                </p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <Link
                     href="/dashboard"
-                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-(--accent) px-4 py-2 text-xs font-semibold text-white transition hover:bg-(--accent-strong)"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--accent-strong)"
                   >
                     Go to Dashboard
-                    <ArrowRight className="h-3 w-3" />
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <Link
+                    href="/ranking"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                  >
+                    View ranking
                   </Link>
                 </div>
-                  <div className="rounded-2xl border bg-white/80 p-4">
-                    <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                      <Wand2 className="h-3.5 w-3.5" />
-                      What it makes
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-700">
-                      <p className="flex items-start gap-2">
-                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
-                        Public changelog markdown
-                      </p>
-                      <p className="flex items-start gap-2">
-                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
-                        X thread drafts
-                      </p>
-                      <p className="flex items-start gap-2">
-                        <BadgeCheck className="mt-1 h-4 w-4 text-(--accent-strong) shrink-0" />
-                        LinkedIn and newsletter copy
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border bg-white/80 p-4">
-                    <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                      <Bolt className="h-3.5 w-3.5" />
-                      How it works
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-700">
-                      <p>1. Add a project.</p>
-                      <p>2. Paste raw release notes.</p>
-                      <p>3. Copy polished output.</p>
-                    </div>
-                  </div>
-                </div>
-
-                
-              </div>
+              </article>
             ) : (
-              <AuthCard />
+              <div id="auth-card">
+                <AuthCard />
+              </div>
             )}
+
+            <article className="rounded-2xl border bg-white/85 p-4 shadow-[0_12px_40px_rgba(57,74,126,0.1)]">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                <CalendarClock className="h-3.5 w-3.5 text-(--accent)" />
+                Weekly publishing rhythm
+              </div>
+              <ul className="mt-3 space-y-2 text-sm text-zinc-700">
+                {FLOW_STEPS.map((step, index) => (
+                  <li key={step.title} className="rounded-xl border bg-white px-3 py-2">
+                    <p className="font-semibold text-zinc-900">{index + 1}. {step.title}</p>
+                    <p className="mt-1 text-zinc-600">{step.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </article>
           </div>
         </section>
 
+        <RoadmapBoard />
+
         <section className="grid gap-3 sm:grid-cols-3">
           {[
-            ["Release notes", "Convert notes into concise public changelogs."],
-            ["Audience updates", "Generate social posts and email-friendly summaries."],
-            ["Help content", "Spin release notes into FAQ and support drafts."],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
-              <p className="text-base font-semibold text-foreground">{title}</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
-            </div>
-          ))}
+            {
+              title: "Release notes",
+              body: "Convert rough notes into concise public changelog entries.",
+              icon: Wand2,
+            },
+            {
+              title: "Audience updates",
+              body: "Generate social posts and email-ready summaries in one pass.",
+              icon: Megaphone,
+            },
+            {
+              title: "Help content",
+              body: "Spin release notes into support FAQ and onboarding snippets.",
+              icon: BadgeCheck,
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className="rounded-2xl border bg-white/80 p-4 shadow-[0_12px_40px_rgba(57,74,126,0.1)]"
+              >
+                <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  <Icon className="h-3.5 w-3.5 text-(--accent)" />
+                  {item.title}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-zinc-700">{item.body}</p>
+              </div>
+            );
+          })}
         </section>
       </div>
     </main>

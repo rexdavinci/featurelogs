@@ -1,18 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f2ea;
-  --foreground: #1c130d;
-  --surface: #fffdf8;
-  --surface-muted: #f2eadf;
-  --border: #d7c9b5;
-  --accent: #2f6b54;
-  --accent-strong: #204836;
+  --background: #f5f7ff;
+  --foreground: #131a2d;
+  --surface: #ffffff;
+  --surface-muted: #edf2ff;
+  --border: #d7e1f6;
+  --accent: #4f46e5;
+  --accent-strong: #312e81;
+  --accent-soft: #e0e7ff;
+  --hope: #0f766e;
   --danger: #b42318;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+button {
+  cursor: pointer;
 }
 
 @theme inline {
@@ -24,9 +30,10 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 18% -10%, #fff3db, transparent 40%),
-    radial-gradient(circle at 88% 12%, #def3e5, transparent 34%),
-    linear-gradient(180deg, #fbf8f2 0%, #efe6d8 100%);
+    radial-gradient(circle at 12% 8%, #e4e8ff, transparent 38%),
+    radial-gradient(circle at 88% 6%, #d7f7ef, transparent 30%),
+    radial-gradient(circle at 52% 110%, #e7e9ff, transparent 40%),
+    linear-gradient(180deg, #f8faff 0%, #f1f5ff 45%, #eef3ff 100%);
   color: var(--foreground);
   font-family: var(--font-sora), sans-serif;
 }
@@ -44,8 +51,24 @@ body {
 }
 
 .glass {
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.gradient-card {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-soft) 72%, white) 0%,
+      color-mix(in srgb, #d5f5ee 35%, white) 100%
+    );
+}
+
+.text-gradient {
+  background: linear-gradient(120deg, var(--accent) 0%, var(--hope) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 a {

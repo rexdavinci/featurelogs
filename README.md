@@ -17,6 +17,7 @@ It turns raw product updates into:
 - Auth adapter layer (`lib/auth/*`) with Neon session auth implementation
 - Upstash Redis for abuse prevention
 - OpenAI generation (with fallback mode when API key is missing)
+- Public roadmap-first open source workflow
 
 ## Environment Variables
 
@@ -42,17 +43,6 @@ Required backend variables:
 - `UPSTASH_REDIS_REST_TOKEN`
 - `OPENAI_API_KEY`
 - `OPENROUTER_API_KEY` (when using OpenRouter provider)
-
-Required client Firebase variables:
-
-- `NEXT_PUBLIC_DB_PROVIDER` (`firestore` by default)
-- `NEXT_PUBLIC_FIREBASE_API_KEY`
-- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-- `NEXT_PUBLIC_FIREBASE_APP_ID`
-- `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
 
 ## Run
 
@@ -90,6 +80,14 @@ npm run db:migrate
 ```
 
 Auth sessions are provider-driven via the auth adapter. Neon auth uses `auth_users` and `auth_sessions`.
+
+## Open Source Philosophy
+
+FeatureLogs is designed for builders who ship in public. The product roadmap favors:
+
+- practical workflows over vanity features
+- transparent priorities discussed in GitHub issues
+- contributor-friendly architecture (adapters for auth and data layers)
 
 ## Firebase and Redis Setup
 

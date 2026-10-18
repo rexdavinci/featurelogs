@@ -18,10 +18,9 @@ import {
   Plus,
   Rocket,
   ScrollText,
-  Sparkles,
   WandSparkles,
 } from "lucide-react";
-import { formatUsageText } from "@/utils/tiers";
+import { FAIR_USE_LIMITS, formatUsageText } from "@/utils/tiers";
 import {
   generateMonthlyNewsletter,
   generatePackage,
@@ -45,6 +44,12 @@ type Props = {
   projects: Project[];
   styleTemplates: StyleTemplates;
 };
+
+const BUILD_IN_PUBLIC_CHECKLIST = [
+  "Post one changelog update",
+  "Share one social thread",
+  "Capture one user-facing lesson",
+];
 
 function splitToTweets(input: string, maxMessages: number) {
   const customBlocks = input
@@ -143,9 +148,15 @@ export default function DashboardClient({
   );
   const latestThree = logs.slice(0, 3);
   const currentTemplate = templates[activeTemplate];
+  const remainingCredits = Math.max(FAIR_USE_LIMITS.periodCap - usageCount, 0);
+  const usageRatio = Math.min(
+    100,
+    Math.round((usageCount / FAIR_USE_LIMITS.periodCap) * 100),
+  );
   const selectedProjectRecord = projects.find(
     (project) => project.name === selectedProject,
   );
+  const checklistCompleted = Math.min(logs.length, BUILD_IN_PUBLIC_CHECKLIST.length);
 
   function updateTemplateField(
     field: "tone" | "cta" | "hashtags",
@@ -191,14 +202,30 @@ export default function DashboardClient({
       <div className="relative mx-auto w-full max-w-7xl space-y-5">
         <Header usageCount={usageCount} userEmail={userEmail} />
 
-        <section className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-              Fair use
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-(--accent-strong)">
-              {formatUsageText(usageCount)}
-            </p>
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="gradient-card rounded-2xl border p-4 shadow-[0_12px_40px_rgba(59,45,28,0.09)] sm:col-span-2 lg:col-span-2">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600">
+                  Credits
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-(--accent-strong)">
+                  {remainingCredits} left
+                </p>
+                <p className="text-xs text-zinc-600">{formatUsageText(usageCount)}</p>
+              </div>
+              <p className="rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-semibold text-zinc-600">
+                {remainingCredits > 0
+                  ? "You still have room to ship more updates today."
+                  : "Daily cap reached — refreshes within 24h."}
+              </p>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
+              <div
+                className="h-full rounded-full bg-(--accent)"
+                style={{ width: `${usageRatio}%` }}
+              />
+            </div>
           </div>
           <div className="rounded-2xl border bg-white/75 p-4 shadow-[0_12px_40px_rgba(59,45,28,0.06)]">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
@@ -216,6 +243,64 @@ export default function DashboardClient({
               {logs.length}
             </p>
           </div>
+        </section>
+
+        <section className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+          <article className="rounded-2xl border bg-white/80 p-4 shadow-[0_12px_40px_rgba(57,74,126,0.1)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+              Build-in-public momentum
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-foreground">
+              This week&apos;s publishing checklist
+            </h2>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {BUILD_IN_PUBLIC_CHECKLIST.map((item, index) => {
+                const done = index < checklistCompleted;
+                return (
+                  <div
+                    key={item}
+                    className={`rounded-xl border px-3 py-2 text-sm ${
+                      done
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border-zinc-200 bg-white text-zinc-600"
+                    }`}
+                  >
+                    <p className="font-semibold">{done ? "Done" : "Pending"}</p>
+                    <p className="mt-1">{item}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+
+          <article className="gradient-card rounded-2xl border p-4 shadow-[0_12px_40px_rgba(57,74,126,0.12)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Open-source roadmap
+            </p>
+            <p className="mt-2 text-sm text-zinc-700">
+              Help shape FeatureLogs by proposing workflow improvements for builders shipping in public.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="https://github.com/rexdavinci/featurelogs/issues"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-700"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Propose feature
+              </Link>
+              <Link
+                href="https://github.com/rexdavinci/featurelogs/pulls"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-700"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                Explore PRs
+              </Link>
+            </div>
+          </article>
         </section>
 
         <div className="relative z-10 flex flex-wrap items-center gap-2 border-b border-zinc-300/70 pb-3">
@@ -376,7 +461,7 @@ export default function DashboardClient({
                     <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                       <div>
                         <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-600">
-                          Inspiration Preset
+                          Inspiration Preset <span className="text-zinc-400 lowercase">(optional)</span>
                         </label>
                         <select
                           value={selectedPreset}
@@ -399,7 +484,7 @@ export default function DashboardClient({
                         disabled={!selectedPreset}
                         className="inline-flex items-center justify-center gap-1 rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        <Sparkles className="h-3.5 w-3.5" />
+                        {/* <Sparkles className="h-3.5 w-3.5" /> */}
                         Apply Preset
                       </button>
                     </div>

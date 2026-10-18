@@ -59,7 +59,7 @@ export function AuthCard() {
   };
 
   return (
-    <div className="glass rounded-3xl border border-white/60 p-5 shadow-[0_24px_80px_rgba(44,30,11,0.16)] sm:p-6 animate-rise">
+    <div className="glass rounded-3xl border border-white/70 p-5 shadow-[0_26px_90px_rgba(49,46,129,0.2)] sm:p-6 animate-rise">
       <div className="mb-5 space-y-1">
         <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
           {mode === "login" ? <>Welcome Back</> : <>Get Started</>}
@@ -68,6 +68,9 @@ export function AuthCard() {
           {mode === "login"
             ? "Sign in to manage your public changelogs."
             : "Create an account to onboard your projects."}
+        </p>
+        <p className="inline-flex rounded-full border border-indigo-200 bg-indigo-50/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+          Free credits reset every 24h
         </p>
       </div>
 
