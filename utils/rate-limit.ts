@@ -1,10 +1,11 @@
 import "server-only";
+import { env } from "@/.env";
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const redisUrl = env.rateLimit.url;
+const redisToken = env.rateLimit.token;
 
 let limiters: Map<string, Ratelimit> | null = null;
 

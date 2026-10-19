@@ -9,7 +9,7 @@ import type {
 } from "@/lib/types";
 import { getNeonDb } from "./client";
 import { logs, profiles, projects, styleTemplates, usageEvents } from "./schema";
-import type { ServerDatabaseAdapter } from "@/lib/db/server";
+import type { ServerDatabaseAdapter } from "@/lib/db/types";
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {

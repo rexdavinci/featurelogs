@@ -1,5 +1,6 @@
 "use server";
 
+import { env } from "@/.env";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/utils/session";
 import { ensureUserProfile } from "@/lib/db/server";
@@ -23,7 +24,7 @@ export async function loginUserAction(email: string, password: string) {
     cookieStore.set(SESSION_COOKIE, session.token, {
       maxAge: session.maxAgeSeconds,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.production,
       path: "/",
       sameSite: "lax",
     });
@@ -32,7 +33,10 @@ export async function loginUserAction(email: string, password: string) {
     return { ok: true };
   } catch (error: unknown) {
     console.error("Login server action error:", error);
-    const message = error instanceof Error ? error.message : "Failed to authenticate session.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to authenticate session.";
     return { ok: false, error: message };
   }
 }
@@ -51,7 +55,7 @@ export async function signupUserAction(email: string, password: string) {
     cookieStore.set(SESSION_COOKIE, session.token, {
       maxAge: session.maxAgeSeconds,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.production,
       path: "/",
       sameSite: "lax",
     });

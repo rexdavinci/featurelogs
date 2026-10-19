@@ -158,7 +158,7 @@ export async function generateMonthlyNewsletter(): Promise<MonthlyNewsletterStat
     }
 
     try {
-      const text = await generateMonthlyNewsletterFromChangelogs({
+      const result = await generateMonthlyNewsletterFromChangelogs({
         changelogEntries,
         templates: dashboard.styleTemplates,
       });
@@ -166,7 +166,7 @@ export async function generateMonthlyNewsletter(): Promise<MonthlyNewsletterStat
         changelogCount: changelogEntries.length,
       });
       revalidatePath("/dashboard");
-      return { ok: true, text };
+      return { ok: true, text: result.data };
     } catch {
       return {
         ok: false,
@@ -299,11 +299,8 @@ export async function generatePackage(
 
   let generated;
   try {
-    generated = await generateContent({
-      projectName,
-      rawInput,
-      templates,
-    });
+    const result = await generateContent({ projectName, rawInput, templates });
+    generated = result.data;
     await consumeUsage(userId, "generate_marketing_kit_ai", {
       projectId,
       projectName,

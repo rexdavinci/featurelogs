@@ -1,3 +1,4 @@
+import { env } from "@/.env";
 import Link from "next/link";
 import * as Accordion from "@radix-ui/react-accordion";
 import type { Metadata } from "next";
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
 };
 
 export default function FAQPage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = env.site.url;
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

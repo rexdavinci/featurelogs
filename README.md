@@ -1,133 +1,100 @@
 # FeatureLogs
 
-FeatureLogs is an open-source release workspace for founders and product teams.
+**Make every update worth sharing.** An open-source product communication studio for apps, collections, courses, services, and communities.
 
-It turns raw product updates into:
-- Public changelog markdown
-- X thread drafts
-- LinkedIn post drafts
-- Help Center FAQ entries
-- Email newsletter drafts
-- Monthly recap copy
+Turn rough product notes into changelogs, X threads, LinkedIn posts, FAQs, and newsletters. Keep your voice consistent per project, revisit saved kits, and prepare monthly recaps. Review drafts before sharing them.
 
-## Stack
+## Run locally
 
-- Next.js App Router + TypeScript + Tailwind CSS
-- Database adapter layer (`lib/db/*`) with Firestore and Neon implementations
-- Auth adapter layer (`lib/auth/*`) with Neon session auth implementation
-- Upstash Redis for abuse prevention
-- OpenAI generation (with fallback mode when API key is missing)
-- Public roadmap-first open source workflow
+Use Node.js 20.9+ and npm.
 
-## Environment Variables
-
-Copy `.env.example` to `.env.local` and fill values:
-
-```bash
+```sh
+npm ci
 cp .env.example .env.local
-```
-
-Recommended SEO variables:
-
-- `NEXT_PUBLIC_SITE_URL=https://your-domain.com`
-- `GOOGLE_SITE_VERIFICATION=your-google-verification-token`
-
-Required backend variables:
-
-- `DB_PROVIDER` (`firestore` or `neon`)
-- `AUTH_PROVIDER` (`neon` or `firebase`; password login/signup currently implemented for `neon`)
-- `DATABASE_URL` (required when `DB_PROVIDER=neon`)
-- `FIREBASE_PROJECT_ID`
-- `FIREBASE_SERVICE_ACCOUNT_KEY_PATH` (path to your local service account JSON, for example `./firebase-service-account.json`)
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `OPENAI_API_KEY`
-- `OPENROUTER_API_KEY` (when using OpenRouter provider)
-
-## Run
-
-```bash
-npm install
+# Fill DATABASE_URL and provision the tables before creating an account.
+npm run db:migrate
 npm run dev
 ```
 
-When running with Neon:
+Open [localhost:3000](http://localhost:3000). The example configuration uses Neon/Postgres storage and password authentication. Supply a Postgres connection string with the schema from `drizzle/`. `AI_PROVIDER=mock` creates deterministic offline drafts without AI credentials. It does not simulate authentication or storage.
 
-```bash
-DB_PROVIDER=neon npm run dev
+## Choose your services
+
+Set environment variables in `.env.local` or your hosting platform. [`.env.ts`](.env.ts) holds a server-only, immutable configuration snapshot in memory; restart the process after changing settings. No settings or keys are saved to the browser. Each server worker has its own snapshot.
+
+| Service          | Setting          | Supported values                           |
+| ---------------- | ---------------- | ------------------------------------------ |
+| AI               | `AI_PROVIDER`    | `openrouter`, `openai`, `gemini`, `mock`   |
+| Model            | `AI_MODEL`       | A model supported by the selected provider |
+| Database         | `DB_PROVIDER`    | `neon`, `firestore`                        |
+| Authentication   | `AUTH_PROVIDER`  | `neon`, `firebase`                         |
+| Email (reserved) | `EMAIL_PROVIDER` | `none`, `resend`, `postmark`, `smtp`       |
+
+**Email sending is not implemented.** Selecting an email provider only reserves configuration for a future transport. It does not send email, create accounts with a provider, or enable email authentication.
+
+Examples:
+
+```dotenv
+AI_PROVIDER=openrouter
+AI_MODEL=openai/gpt-4.1-mini
+OPENROUTER_API_KEY=your-key
 ```
 
-Open http://localhost:3000
-
-## Production Check
-
-```bash
-npm run build
+```dotenv
+AI_PROVIDER=openai
+AI_MODEL=gpt-4.1-mini
+OPENAI_API_KEY=your-key
 ```
 
-## Drizzle (Neon)
-
-Generate SQL migrations from schema changes:
-
-```bash
-npm run db:generate
+```dotenv
+AI_PROVIDER=gemini
+AI_MODEL=gemini-2.5-flash
+GEMINI_API_KEY=your-key
 ```
 
-Apply generated migrations:
+Blank `AI_MODEL` uses the selected provider's default. Models must support the adapter's text/JSON request format. Configured provider errors are reported as failures; they never silently become mock drafts. `mock` is a deliberate offline mode.
 
-```bash
-npm run db:migrate
+For existing installations without `AI_PROVIDER`, the old OpenRouter behavior is retained: `OPENROUTER_API_KEY`, or legacy `OPENAI_API_KEY`, selects OpenRouter; legacy `OPENAI_MODEL` remains recognized. With neither key, the default is `mock`. **Migrate to explicit provider selection and its matching key.** Explicit OpenRouter selection never uses an OpenAI key.
+
+### Storage and authentication
+
+- `DB_PROVIDER=neon`: set `DATABASE_URL` and run `npm run db:migrate`.
+- `DB_PROVIDER=firestore`: set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_SERVICE_KEY`. Escaped `\n` characters in the private key are normalized. The old `NEXT_PUBLIC_FIREBASE_PROJECT_ID` name remains an alias.
+- `AUTH_PROVIDER=neon`: app-managed password accounts and sessions stored in Postgres; this requires `DATABASE_URL` even with Firestore storage. This adapter is not the hosted Neon Auth product.
+- `AUTH_PROVIDER=firebase`: verifies existing Firebase ID tokens or session cookies. Password signup/login and session creation are not implemented by this adapter.
+
+Only the selected database/auth implementations load. A Neon-only installation needs no Firebase credentials. Choosing a provider does not migrate existing users or data. If selectors are omitted, legacy defaults remain `firestore` storage and `neon` auth.
+
+### Other settings
+
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`: shared rate limits. Existing behavior allows requests when unconfigured or unavailable; account usage credits are tracked separately.
+- `SITE_URL`: canonical origin for metadata and the sitemap. `NEXT_PUBLIC_SITE_URL` (legacy, higher precedence) and `VERCEL_PROJECT_PRODUCTION_URL` are also accepted.
+- `GOOGLE_SITE_VERIFICATION`: optional ownership verification.
+
+## Architecture and contributing
+
+Provider SDKs live in `lib/ai/adapters/`. Workflows, prompts, and response validation live outside those adapters. Both AI workflows return the same envelope:
+
+```ts
+{
+  data: /* GenerationResult for kits, string for monthly recaps */,
+  provider: "openai", // or openrouter, gemini, mock
+  model: "gpt-4.1-mini",
+  usage: { inputTokens: 100, outputTokens: 200 } // null when unknown
+}
 ```
 
-Auth sessions are provider-driven via the auth adapter. Neon auth uses `auth_users` and `auth_sessions`.
+See [architecture and extension points](docs/architecture.md), the [0.2.2 release notes](CHANGELOG.md), and [launch suggestions](docs/launch.md).
 
-## Open Source Philosophy
-
-FeatureLogs is designed for builders who ship in public. The product roadmap favors:
-
-- practical workflows over vanity features
-- transparent priorities discussed in GitHub issues
-- contributor-friendly architecture (adapters for auth and data layers)
-
-## Firebase and Redis Setup
-
-1. Create a Google Cloud project with Firestore enabled.
-2. Provide a service account via `FIREBASE_SERVICE_ACCOUNT_KEY` or the individual Firestore env vars.
-3. Create an Upstash Redis database and add the REST URL and token.
-4. Set `OPENAI_API_KEY` and optionally `OPENROUTER_API_KEY`.
-5. Deploy with `NEXT_PUBLIC_SITE_URL` and `GOOGLE_SITE_VERIFICATION` configured.
-6. Submit this sitemap URL:
-
-```text
-https://your-domain.com/sitemap.xml
-```
-
-7. Monitor Indexing, Core Web Vitals, and Coverage reports for improvements.
-
-## Security Checklist (Before Push)
-
-- Never commit `.env.local` or service-account JSON files.
-- Keep `.env.example` as placeholders only.
-- Rotate any key immediately if it was ever exposed in logs, screenshots, or commits.
-- Verify Firebase rules and indexes are deployed:
-
-```bash
-firebase deploy --only firestore:rules,firestore:indexes
-```
-
-- Verify production build locally:
-
-```bash
+```sh
+npm test
 npm run lint
+npx tsc --noEmit
 npm run build
 ```
 
-## Contributing
+Tests mock provider HTTP responses; they do not call paid AI services or your database. `npm test` uses the `react-server` condition so Node can import server-only modules safely during tests. Keep provider-specific response shapes out of workflows and UI components. Include contract tests when adding a provider.
 
-- Use feature branches and open PRs with a short test plan.
-- Keep secrets out of commits and issue threads.
-- Prefer focused changes that avoid unrelated refactors.
+Generate schema migrations with `npm run db:generate`; apply them with `npm run db:migrate`. Next.js loads runtime `.env` values; the Drizzle CLI separately loads them with `@next/env` before reading its connection string.
 
-## Fair Use
-
-The app enforces fair-use rate limits in Redis. See [Terms of Service](app/terms/page.tsx) for the policy text.
+Never commit `.env.local` or service-account credentials. For vulnerability reporting, see [SECURITY.md](SECURITY.md).

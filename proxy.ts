@@ -1,3 +1,4 @@
+import { env } from "@/.env";
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -12,7 +13,7 @@ export default function proxy(request: NextRequest) {
     response.cookies.set("featurelogs_session", randomUUID(), {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: env.production,
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });

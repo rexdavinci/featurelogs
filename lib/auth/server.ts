@@ -1,92 +1,37 @@
+import "server-only";
+import { env } from "@/.env";
 import type {
   AuthAdapter,
   AuthPasswordUser,
   AuthSession,
   AuthSessionUser,
-} from "@/lib/auth/types";
-import { neonAuthAdapter } from "@/lib/auth/neon-auth";
+} from "./types";
 
-function resolveAuthProvider() {
-  return (process.env.AUTH_PROVIDER ?? "neon").trim().toLowerCase();
+let adapter: Promise<AuthAdapter> | undefined;
+export function getAuthAdapter(): Promise<AuthAdapter> {
+  return (adapter ??=
+    env.auth.provider === "neon"
+      ? import("./neon-auth").then((module) => module.neonAuthAdapter)
+      : import("./firebase-auth").then((module) => module.firebaseAuthAdapter));
 }
 
-const unsupportedPasswordAuthError =
-  "Password authentication is not configured for this auth provider.";
-
-const firebaseAuthAdapter: AuthAdapter = {
-  supportsPasswordAuth: false,
-  async loginWithPassword() {
-    throw new Error(unsupportedPasswordAuthError);
-  },
-  async signupWithPassword() {
-    throw new Error(unsupportedPasswordAuthError);
-  },
-  async createSession() {
-    throw new Error(
-      "Session creation is not implemented for firebase auth in this adapter.",
-    );
-  },
-  async getSessionUser(sessionToken) {
-    const { adminAuth } = await import("@/utils/firebase-admin");
-    try {
-      const decoded = await adminAuth.verifyIdToken(sessionToken);
-      return {
-        uid: decoded.uid,
-        email: decoded.email,
-      };
-    } catch {
-      try {
-        const decoded = await adminAuth.verifySessionCookie(sessionToken, true);
-        return {
-          uid: decoded.uid,
-          email: decoded.email,
-        };
-      } catch {
-        return null;
-      }
-    }
-  },
-  async revokeSession() {
-    // Stateless cookie verification mode; no server-side session to revoke.
-  },
-};
-
-function createAuthAdapter(): AuthAdapter {
-  const provider = resolveAuthProvider();
-
-  if (provider === "neon") {
-    return neonAuthAdapter;
-  }
-
-  if (provider === "firebase") {
-    return firebaseAuthAdapter;
-  }
-
-  throw new Error(
-    `Unsupported AUTH_PROVIDER "${provider}". Supported providers: neon, firebase.`,
-  );
-}
-
-export const authAdapter = createAuthAdapter();
-
-export const supportsPasswordAuth = authAdapter.supportsPasswordAuth;
-
-export const loginWithPassword = (
+// Firebase verifies existing tokens/cookies; password signup/login is Neon-only.
+export const supportsPasswordAuth = env.auth.provider === "neon";
+export const loginWithPassword = async (
   ...args: Parameters<AuthAdapter["loginWithPassword"]>
-): Promise<AuthPasswordUser> => authAdapter.loginWithPassword(...args);
-
-export const signupWithPassword = (
+): Promise<AuthPasswordUser> =>
+  (await getAuthAdapter()).loginWithPassword(...args);
+export const signupWithPassword = async (
   ...args: Parameters<AuthAdapter["signupWithPassword"]>
-): Promise<AuthPasswordUser> => authAdapter.signupWithPassword(...args);
-
-export const createAuthSession = (
+): Promise<AuthPasswordUser> =>
+  (await getAuthAdapter()).signupWithPassword(...args);
+export const createAuthSession = async (
   ...args: Parameters<AuthAdapter["createSession"]>
-): Promise<AuthSession> => authAdapter.createSession(...args);
-
-export const getAuthSessionUser = (
+): Promise<AuthSession> => (await getAuthAdapter()).createSession(...args);
+export const getAuthSessionUser = async (
   ...args: Parameters<AuthAdapter["getSessionUser"]>
-): Promise<AuthSessionUser | null> => authAdapter.getSessionUser(...args);
-
-export const revokeAuthSession = (
+): Promise<AuthSessionUser | null> =>
+  (await getAuthAdapter()).getSessionUser(...args);
+export const revokeAuthSession = async (
   ...args: Parameters<AuthAdapter["revokeSession"]>
-): Promise<void> => authAdapter.revokeSession(...args);
+): Promise<void> => (await getAuthAdapter()).revokeSession(...args);

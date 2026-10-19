@@ -1,20 +1,27 @@
+import "server-only";
+import { env } from "@/.env";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
-const serviceKey = process.env.FIREBASE_SERVICE_KEY;
+const { privateKey, projectId, clientEmail } = env.firebase;
 
-if (!serviceKey) {
-  throw new Error("FIREBASE_SERVICE_KEY environment variable is not set");
+if (!privateKey || !projectId || !clientEmail) {
+  throw new Error(
+    "Firebase requires FIREBASE_PROJECT_ID, FIREBASE_SERVICE_KEY, and FIREBASE_CLIENT_EMAIL.",
+  );
 }
 
-const app = getApps().length === 0 ? initializeApp({
-  credential: cert({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    privateKey: serviceKey?.replace(/\\n/g, "\n"),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  }),
-}) : getApps()[0];
+const app =
+  getApps().length === 0
+    ? initializeApp({
+        credential: cert({
+          projectId,
+          privateKey,
+          clientEmail,
+        }),
+      })
+    : getApps()[0];
 
 const adminAuth = getAuth(app);
 const adminDb = getFirestore(app);

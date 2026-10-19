@@ -1,3 +1,4 @@
+import { env } from "@/.env";
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
+    google: env.site.googleVerification,
   },
 };
 
