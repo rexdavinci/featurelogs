@@ -6,10 +6,22 @@ import { Header } from "../components/Header";
 
 const FAQ_ITEMS = [
   {
+    id: "product-types",
+    question: "Is FeatureLogs only for software products?",
+    answer:
+      "No. Use it for apps, physical products, courses, services, and communities. Describe what changed, who it helps, and what people can do next. The starting-point templates help you write the brief.",
+  },
+  {
+    id: "workflow-agents",
+    question: "Can I connect workflow agents today?",
+    answer:
+      "Not yet. Today you bring your notes and review the generated drafts. Connected sources and workflow agents are a direction we are exploring for future releases.",
+  },
+  {
     id: "item-1",
     question: "How does FeatureLogs generate content from raw notes?",
     answer:
-      "Paste your release notes, commits, or rough update text in the generator panel. FeatureLogs analyzes the input and produces a changelog, X thread, LinkedIn draft, Help Center FAQ, and newsletter outputs.",
+      "Paste notes about a launch, a new collection, a course, or any product improvement in the studio. FeatureLogs analyzes the input and produces a changelog, X thread, LinkedIn draft, Help Center FAQ, and newsletter outputs.",
   },
   {
     id: "item-2",
@@ -21,7 +33,7 @@ const FAQ_ITEMS = [
     id: "item-3",
     question: "What are the fair-use limits?",
     answer:
-      "The app is rate-limited to 50 generations in 24 hours and 100 projects per account to keep the shared service usable.",
+      "Each account has 50 credits per rolling 24 hours. Generating and saving an update kit uses 2 credits; creating a project or saving voice settings uses 1. The account limit is 100 projects.",
   },
   {
     id: "item-4",
@@ -53,9 +65,7 @@ export const metadata: Metadata = {
 };
 
 export default function FAQPage() {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -84,9 +94,12 @@ export default function FAQPage() {
             <CircleHelp className="h-3.5 w-3.5" />
             Help Center
           </p>
-          <h1 className="mt-2 text-4xl font-semibold text-foreground">Frequently Asked Questions</h1>
+          <h1 className="mt-2 text-4xl font-semibold text-foreground">
+            Frequently Asked Questions
+          </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-(--text-secondary)">
-            A few answers to help you go from your first project to your next great update.
+            A few answers to help you go from your first project to your next
+            great update.
           </p>
 
           <div className="mt-5 rounded-2xl border bg-(--surface) p-4">
@@ -97,13 +110,19 @@ export default function FAQPage() {
             <ul className="mt-2 space-y-1 text-sm leading-7 text-(--text-secondary)">
               <li>Create your first project in the workspace.</li>
               <li>Use presets to quickly seed high-quality raw notes.</li>
-              <li>Read the Terms page for fair-use guidance and rate limits.</li>
+              <li>
+                Read the Terms page for fair-use guidance and rate limits.
+              </li>
             </ul>
           </div>
 
           <Accordion.Root type="single" collapsible className="mt-6 space-y-3">
             {FAQ_ITEMS.map((item) => (
-              <Accordion.Item key={item.id} value={item.id} className="overflow-hidden rounded-xl border bg-(--surface)">
+              <Accordion.Item
+                key={item.id}
+                value={item.id}
+                className="overflow-hidden rounded-xl border bg-(--surface)"
+              >
                 <Accordion.Header>
                   <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-foreground">
                     <span>{item.question}</span>
@@ -150,10 +169,16 @@ export default function FAQPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
-            <Link href="/terms" className="text-(--accent-strong) underline underline-offset-2">
+            <Link
+              href="/terms"
+              className="text-(--accent-strong) underline underline-offset-2"
+            >
               Terms of Service
             </Link>
-            <Link href="/privacy" className="text-(--accent-strong) underline underline-offset-2">
+            <Link
+              href="/privacy"
+              className="text-(--accent-strong) underline underline-offset-2"
+            >
               Privacy Policy
             </Link>
           </div>

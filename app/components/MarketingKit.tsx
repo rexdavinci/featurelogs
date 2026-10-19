@@ -241,9 +241,9 @@ export function MarketingKit({
       <header className="kit-heading">
         <div>
           <span className="workspace-eyebrow">
-            <Sparkles size={13} /> THE WORDS TO GO WITH YOUR WORK
+            <Sparkles size={13} /> FROM PROGRESS TO PEOPLE
           </span>
-          <h2>Your marketing kit</h2>
+          <h2>Your update kit</h2>
           <p>
             {output ? (
               <>

@@ -1,18 +1,18 @@
-import { Github } from "./components/SocialIcons";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  Code2,
-  Heart,
-
-  MessageSquare,
+  FileText,
   Sparkles,
-  Terminal,
-  WandSparkles,
+  MessagesSquare,
+  Package,
+  GraduationCap,
+  Users,
+  Workflow,
 } from "lucide-react";
+import { Github } from "./components/SocialIcons";
 import { BrandMark } from "./components/Brand";
 import { Header } from "./components/Header";
 import { KitPreview } from "./components/KitPreview";
@@ -21,64 +21,63 @@ import { getSiteUrl } from "@/utils/seo";
 import { getSessionUser } from "@/utils/session";
 
 export const metadata: Metadata = {
-  title: "Build something. Tell the world.",
+  title: "Make every update worth sharing",
   description:
-    "Turn your commits and release notes into a marketing kit with AI. Create changelogs, social posts, and newsletters. Open source. Built for builders.",
+    "Your product keeps moving. Bring people with you. Turn product notes into on-brand changelogs, social posts, newsletters, and FAQs with FeatureLogs.",
   alternates: { canonical: "/" },
 };
 
 export default async function Home() {
   const user = await getSessionUser();
   const startHref = user ? "/dashboard" : "/login?mode=signup";
-  const softwareSchema = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "FeatureLogs",
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
-    url: getSiteUrl(),
-    description:
-      "Turn rough product updates into polished changelogs, social posts, and newsletters.",
-  };
-
   return (
-    <main className="landing-shell">
+    <main className="landing-shell brand-evolution">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareSchema).replace(/</g, "\\u003c"),
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "FeatureLogs",
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web",
+            url: getSiteUrl(),
+            description:
+              "A product communication studio that turns product notes into changelogs, social posts, newsletters, and FAQs.",
+          }).replace(/</g, "\\u003c"),
         }}
       />
       <Header userEmail={user?.email} />
-      <section className="hero">
-        <div className="hero-copy animate-rise">
-          <Link href="#roadmap" className="eyebrow-pill">
-            <span className="status-dot" /> OPEN SOURCE. OPEN POSSIBILITIES.{" "}
-            <ArrowUpRight size={13} />
-          </Link>
+      <section className="release-hero">
+        <div className="release-hero-copy animate-rise">
+          <p className="release-eyebrow">
+            <span className="status-dot" /> THE PRODUCT COMMUNICATION STUDIO
+          </p>
           <h1>
-            You build it.
+            Your product
             <br />
-            We help you
+            moves forward.
             <br />
-            <span>tell the world.</span>
+            <span>
+              Bring people
+              <br />
+              with you.
+            </span>
           </h1>
-          <p className="hero-description">
-            Great products deserve to be seen. Turn your everyday progress into
-            changelogs, social posts, and newsletters. Without the blank page.
+          <p className="release-hero-description">
+            You made something better. Let’s make sure people know. Turn
+            everyday progress into clear, on-brand updates for every place your
+            audience is.
           </p>
           <div className="hero-actions">
             <Link href={startHref} className="button button-accent">
-              {user ? "Back to your workspace" : "Create your first kit"}
+              {user ? "Open your studio" : "Create your first update"}
               <ArrowRight size={17} />
-            </Link>
-            <Link href="#example" className="text-link">
-              See it in action <ArrowDownIcon />
             </Link>
           </div>
           <div className="hero-reassurance">
             <span>
-              <Check size={13} /> Free to get started
+              <Check size={13} /> Free to start
             </span>
             <span>
               <Check size={13} /> No credit card
@@ -87,203 +86,189 @@ export default async function Home() {
               <Github size={13} /> Open source
             </span>
           </div>
-          <div className="hero-footnote">
-            <span className="footnote-line" />
-            <span>LESS TIME WRITING. MORE TIME BUILDING.</span>
+          <div className="hero-principle">
+            <span>LESS BLANK PAGE.</span>
+            <span>MORE MOMENTUM.</span>
           </div>
         </div>
-        <div className="hero-preview animate-rise-delayed">
-          <div className="preview-floating-note">
-            <span className="handdrawn-arrow" aria-hidden="true">
-              ↘
-            </span>{" "}
-            Your next release, already a story.
-          </div>
+        <div className="release-hero-demo animate-rise-delayed">
           <KitPreview />
-          <div className="preview-caption">
-            <span className="status-dot" /> One update. A whole lot of
-            possibilities.
-          </div>
         </div>
       </section>
-      <section className="channel-strip" aria-label="Content formats">
-        <p>One idea. Every channel.</p>
-        <div>
-          <span>
-            <Terminal size={17} />
-            Changelog
-          </span>
-          <span className="channel-x">
-            𝕏 <span>X / Twitter</span>
-          </span>
-          <span>
-            <span className="linkedin-mark">in</span>LinkedIn
-          </span>
-          <span>
-            <MailIcon />
-            Newsletter
-          </span>
-          <span>
-            <MessageSquare size={17} />
-            Help & FAQ
-          </span>
-        </div>
+      <section className="audience-ribbon" aria-label="Who FeatureLogs is for">
+        <span>
+          IF YOU HAVE A PRODUCT,
+          <br />
+          <strong>you have a story to tell.</strong>
+        </span>
+        <p>
+          <Package size={17} /> Products & services
+        </p>
+        <p>
+          <GraduationCap size={18} /> Courses & resources
+        </p>
+        <p>
+          <MessagesSquare size={18} /> Apps & software
+        </p>
+        <p>
+          <Users size={18} /> Communities
+        </p>
       </section>
-      <section className="how-section" id="how-it-works">
+      <section className="communication-section" id="how-it-works">
         <div className="section-heading">
           <div>
-            <p className="section-kicker">YOUR NEW POST-SHIP RITUAL</p>
-            <h2>From “just shipped” to “just shared.”</h2>
+            <p className="section-kicker">
+              FROM WHAT CHANGED TO WHY IT MATTERS
+            </p>
+            <h2>
+              One update.
+              <br />A little more possibility.
+            </h2>
           </div>
           <p>
-            Keep the momentum.
+            A launch, a useful fix, a small improvement.
             <br />
-            We’ll help with the words.
+            Give every step forward a voice.
           </p>
         </div>
-        <div className="steps-grid">
-          {[
-            {
-              number: "01",
-              icon: Code2,
-              title: "Drop in what you built",
-              body: "Commits, messy notes, a few bullet points. Start with what you already have.",
-              note: "No perfect prompts needed.",
-            },
-            {
-              number: "02",
-              icon: WandSparkles,
-              title: "Make it sound like you",
-              body: "AI turns your updates into a complete kit. Set your tone, then make it your own.",
-              note: "Your work. Your voice.",
-            },
-            {
-              number: "03",
-              icon: ArrowUpRight,
-              title: "Share. Build. Repeat.",
-              body: "Copy your drafts to the channels you love. Give your next release an audience.",
-              note: "Small updates build big momentum.",
-            },
-          ].map((step) => (
-            <article className="step-card" key={step.number}>
-              <div className="step-card-top">
-                <span className="step-icon">
-                  <step.icon size={22} strokeWidth={1.6} />
-                </span>
-                <span className="step-number">{step.number}</span>
-              </div>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-              <span className="step-note">{step.note}</span>
-            </article>
-          ))}
+        <div className="communication-steps">
+          <article>
+            <span className="communication-number">01 / CAPTURE</span>
+            <FileText size={24} />
+            <h3>Start with the real work.</h3>
+            <p>
+              A few notes, a customer-inspired change, or your next launch. No
+              polished brief required.
+            </p>
+            <span className="step-example">
+              “We added a way to book in one click.”
+            </span>
+          </article>
+          <article>
+            <span className="communication-number">02 / SHAPE</span>
+            <Sparkles size={24} />
+            <h3>Find the story in it.</h3>
+            <p>
+              AI helps explain the benefit. Your saved voice keeps each project
+              sounding like you.
+            </p>
+            <span className="step-example">
+              Less setup. More getting started.
+            </span>
+          </article>
+          <article>
+            <span className="communication-number">03 / SHARE</span>
+            <ArrowUpRight size={24} />
+            <h3>Meet your audience.</h3>
+            <p>
+              Review your kit, make it yours, and copy or download drafts for
+              the channels you use.
+            </p>
+            <span className="step-example">
+              Changelog · Social · Email · FAQ
+            </span>
+          </article>
         </div>
       </section>
-      <section className="value-grid">
-        <article className="voice-card">
-          <div className="section-kicker">
-            <Sparkles size={14} /> AN ASSISTANT, WITH YOUR PERSONALITY
-          </div>
+      <section className="editorial-story">
+        <div className="story-statement">
+          <p className="section-kicker">PROGRESS DESERVES AN AUDIENCE</p>
           <h2>
-            Sounds like you.
+            The release is
             <br />
-            Just on a good writing day.
+            just the beginning<span>.</span>
           </h2>
+        </div>
+        <div className="story-details">
           <p>
-            Save your tone, calls to action, and hashtags for each project. Get
-            a consistent starting point, whether you’re sharing a tiny fix or
-            your biggest launch.
+            Customers don’t see your roadmap, your late nights, or the care
+            behind a small improvement. They see what you share.
+          </p>
+          <p>
+            FeatureLogs helps connect the work you do with the people it’s for.
+            One home for your products, your voice, and the updates that keep
+            people coming back.
           </p>
           <Link href={startHref} className="text-link">
-            Find your voice <ArrowRight size={16} />
+            Give your next update a voice <ArrowRight size={16} />
           </Link>
-          <div className="voice-chips">
-            <span>
-              <span /> A little conversational
-            </span>
-            <span>
-              <span /> Clear, never corporate
-            </span>
-            <span>
-              <span /> Always yours
-            </span>
+          <div className="story-attributes">
+            <span>Your voice, per project</span>
+            <span>Five ready-to-edit formats</span>
+            <span>Every draft, saved</span>
           </div>
-        </article>
-        <article className="opensource-card">
-          <div className="open-card-top">
-            <Github size={27} strokeWidth={1.5} />
-            <span>BUILT IN THE OPEN</span>
-            <ArrowUpRight size={20} />
-          </div>
-          <h2>
-            For builders.
+        </div>
+      </section>
+      <section className="agent-horizon" aria-labelledby="horizon-title">
+        <div>
+          <span className="horizon-label">
+            <Workflow size={14} /> THE NEXT CHAPTER · EXPLORING
+          </span>
+          <h2 id="horizon-title">
+            Closer to your work.
             <br />
-            By builders.
+            Further from the busywork.
           </h2>
           <p>
-            We’re building in public, too. Explore the code, share an idea, or
-            help shape what FeatureLogs becomes next.
+            Today, bring your notes. In future releases, we want to bring
+            FeatureLogs into your workflow—with agents that help capture
+            progress and prepare updates for your review.
           </p>
           <a
-            href="https://github.com/rexdavinci/featurelogs"
+            href="https://github.com/rexdavinci/featurelogs/issues"
             target="_blank"
             rel="noreferrer"
-            className="button button-light"
+            className="text-link"
           >
-            Explore on GitHub <ArrowUpRight size={16} />
+            Help shape what comes next <ArrowUpRight size={15} />
           </a>
-          <div className="opensource-footer">
-            <Heart size={14} /> Open source is a feature, not a footnote.
+          <small>
+            Workflow agents and connected sources are not available yet.
+          </small>
+        </div>
+        <div className="workflow-sketch" aria-label="Proposed future workflow">
+          <span className="workflow-caption">A DIRECTION WE’RE EXPLORING</span>
+          <div className="workflow-source">
+            Your tools <span>Where the work happens</span>
           </div>
-        </article>
+          <div className="workflow-line" />
+          <div className="workflow-agent">
+            <BrandMark />
+            <span>
+              FeatureLogs agents<small>Capture · Shape · Prepare</small>
+            </span>
+          </div>
+          <div className="workflow-line" />
+          <div className="workflow-review">
+            <Check size={17} />
+            <span>
+              Your review.
+              <br />
+              <strong>Your voice. Your call.</strong>
+            </span>
+          </div>
+        </div>
       </section>
       <RoadmapBoard />
       <section className="closing-cta">
         <span className="closing-mark">
           <BrandMark />
         </span>
-        <h2>Your next update is already in your commits.</h2>
-        <p>Let’s turn it into something worth sharing.</p>
+        <p className="section-kicker">MAKE EVERY UPDATE WORTH SHARING</p>
+        <h2>
+          Something changed.
+          <br />
+          Start a conversation.
+        </h2>
+        <p>Your next great update starts with a few rough notes.</p>
         <Link href={startHref} className="button button-accent">
-          {user ? "Open your workspace" : "Create your first kit"}
+          {user ? "Open your studio" : "Create your first update"}
           <ArrowRight size={17} />
         </Link>
         <span className="closing-note">
-          Made for the work between the big launches.
+          For the big launches. And everything in between.
         </span>
       </section>
     </main>
-  );
-}
-
-function ArrowDownIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <path d="M12 4v16m-6-6 6 6 6-6" />
-    </svg>
-  );
-}
-function MailIcon() {
-  return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 6 9 7 9-7" />
-    </svg>
   );
 }

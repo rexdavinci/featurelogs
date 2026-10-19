@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown, Folder } from "lucide-react";
 
-export function ProjectPicker({
-  projects,
+export function OptionPicker({
+  options: projects,
   value,
   disabled,
   onChange,
+  label,
+  placeholder,
+  icon,
 }: {
-  projects: { id: string; name: string }[];
+  options: { id: string; name: string; description?: string }[];
   value: string;
   disabled: boolean;
   onChange: (id: string) => void;
+  label: string;
+  placeholder: string;
+  icon: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -81,22 +87,22 @@ export function ProjectPicker({
         ref={trigger}
         type="button"
         className="project-picker-trigger"
-        aria-label={`Selected project: ${selected?.name ?? "Create your first project"}`}
+        aria-label={`${label}: ${selected?.name ?? placeholder}`}
         aria-haspopup="listbox"
         aria-expanded={open && !disabled}
         aria-controls={listId}
         disabled={disabled}
         onClick={() => setOpen(!open)}
       >
-        <Folder size={17} />
-        <span>{selected?.name ?? "Create your first project"}</span>
+        {icon}
+        <span>{selected?.name ?? placeholder}</span>
         <ChevronDown size={15} />
       </button>
       {open && !disabled && (
         <div
           id={listId}
           role="listbox"
-          aria-label="Your projects"
+          aria-label={label}
           className="project-picker-options"
         >
           {projects.map((project) => (
@@ -112,13 +118,34 @@ export function ProjectPicker({
                 trigger.current?.focus();
               }}
             >
-              <Folder size={16} />
-              <span>{project.name}</span>
+              <span className="picker-option-copy">
+                <span>{project.name}</span>
+                {project.description && <small>{project.description}</small>}
+              </span>
               {project.id === value && <Check size={16} />}
             </button>
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+export function ProjectPicker(props: {
+  projects: { id: string; name: string }[];
+  value: string;
+  disabled: boolean;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <OptionPicker
+      options={props.projects}
+      value={props.value}
+      disabled={props.disabled}
+      onChange={props.onChange}
+      label="Selected project"
+      placeholder="Create your first project"
+      icon={<Folder size={17} />}
+    />
   );
 }

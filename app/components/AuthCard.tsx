@@ -69,7 +69,7 @@ export function AuthCard({ initialMode = "login" }: { initialMode?: "login" | "s
             ? "Your projects and drafts are right where you left them."
             : "Create your free account. Your first kit is next."}
         </p>
-        <p className="inline-flex rounded-full border border-(--border) bg-(--surface-muted) px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--hope)">
+        <p className="inline-flex rounded-full border border-(--border) bg-(--surface-muted) px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-(--hope)">
           Free credits reset every 24h
         </p>
       </div>
@@ -134,7 +134,7 @@ export function AuthCard({ initialMode = "login" }: { initialMode?: "login" | "s
         <button
           type="submit"
           disabled={isPending}
-          className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-white transition hover:bg-(--accent-strong) disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-(--on-accent) transition hover:bg-(--accent-strong) disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />

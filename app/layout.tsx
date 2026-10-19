@@ -18,7 +18,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "FeatureLogs | Open-source Release",
+    default: "FeatureLogs | Make every update worth sharing",
     template: "%s | FeatureLogs",
   },
   description:
@@ -30,7 +30,8 @@ export const metadata: Metadata = {
     "changelog generator",
     "release notes",
     "social content automation",
-    "founder marketing",
+    "product communication",
+    "product marketing",
     "product updates",
   ],
   alternates: {
@@ -39,9 +40,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
-    title: "FeatureLogs | Open-source Release",
+    title: "FeatureLogs | Make every update worth sharing",
     description:
-      "Create launch-ready changelogs and social posts from raw development notes.",
+      "Turn product progress into clear, on-brand updates for your audience.",
     siteName: "FeatureLogs",
     images: [
       {
@@ -54,9 +55,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FeatureLogs | Open-source Release",
+    title: "FeatureLogs | Make every update worth sharing",
     description:
-      "Create launch-ready changelogs and social posts from raw development notes.",
+      "Turn product progress into clear, on-brand updates for your audience.",
     images: ["/feature-logs.svg"],
   },
   robots: {

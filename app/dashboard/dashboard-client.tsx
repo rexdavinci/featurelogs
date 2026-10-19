@@ -32,7 +32,7 @@ import {
   type KitOutput,
 } from "../components/MarketingKit";
 import { DraftModal } from "../components/DraftModal";
-import { ProjectPicker } from "../components/ProjectPicker";
+import { OptionPicker, ProjectPicker } from "../components/ProjectPicker";
 import {
   generateMonthlyNewsletter,
   generatePackage,
@@ -142,18 +142,14 @@ export default function DashboardClient({
     }));
     setTemplateFeedback("You have unsaved changes.");
   }
-
   return (
     <main className="workspace-shell workspace-v2">
       <Header usageCount={usageCount} userEmail={userEmail} />
       <div className="workspace-heading-row">
         <div className="workspace-heading">
-          <p className="workspace-eyebrow">YOUR BUILD-IN-PUBLIC STUDIO</p>
-          <h1>Make your progress visible.</h1>
-          <p>
-            A little less staring at a blank page. A little more sharing what
-            you shipped.
-          </p>
+          <p className="workspace-eyebrow">YOUR PRODUCT COMMUNICATION STUDIO</p>
+          <h1>Good work. Great updates.</h1>
+          <p>Turn what changed into a story your customers care about.</p>
         </div>
         <span className="workspace-date">
           <span className="status-dot" /> Ready when you are
@@ -353,8 +349,14 @@ export default function DashboardClient({
                 <div className="composer-heading">
                   <span className="composer-step">01</span>
                   <div>
-                    <h2>What did you ship?</h2>
-                    <p>Rough notes in. A story worth sharing out.</p>
+                    <h2>
+                      {selectedProject
+                        ? `What did you ship for ${selectedProject.name}?`
+                        : "What did you ship?"}
+                    </h2>
+                    <p>
+                      Start with what changed. We’ll help you find the words.
+                    </p>
                   </div>
                   <span className="composer-draft-badge">
                     {selectedProject?.name ?? "Your next project"}
@@ -418,13 +420,13 @@ export default function DashboardClient({
                     disabled={isPending}
                     onChange={(event) => setRawNotes(event.target.value)}
                     placeholder={
-                      "Added dark mode for late-night builders\nMade the dashboard twice as fast\nFixed that one bug everyone kept reporting…\n\nThe small stuff counts, too."
+                      "What’s new in your product?\nWho is it for, and how does it help?\nWhere can people try it?\n\nRough notes are a great place to start."
                     }
                   />
                   <div className="composer-helpers">
                     <span>
-                      <span className="status-dot" /> Commits, bullet points, or
-                      a brain dump.
+                      <span className="status-dot" /> Notes, bullet points, or a
+                      brain dump.
                     </span>
                     <span>
                       {rawNotes.trim().length.toLocaleString()} characters
@@ -432,29 +434,33 @@ export default function DashboardClient({
                   </div>
                   <div className="composer-bottom">
                     <div className="preset-picker">
-                      <label htmlFor="notes-preset">
+                      <span className="preset-label">
                         Need a starting point?
-                      </label>
-                      <select
-                        id="notes-preset"
+                      </span>
+                      <OptionPicker
+                        options={PRESETS.map((preset) => ({
+                          id: preset.label,
+                          name: preset.label,
+                          description: preset.description,
+                        }))}
                         value={selectedPreset}
                         disabled={isPending}
-                        onChange={(event) => {
-                          const label = event.target.value;
+                        label="Starting point"
+                        placeholder="Choose a starting point"
+                        icon={<Sparkles size={16} />}
+                        onChange={(label) => {
                           setSelectedPreset(label);
                           const preset = PRESETS.find(
                             (item) => item.label === label,
                           );
                           if (preset) setRawNotes(preset.text);
                         }}
-                      >
-                        <option value="">Try an example</option>
-                        {PRESETS.map((preset) => (
-                          <option key={preset.label} value={preset.label}>
-                            {preset.label}
-                          </option>
-                        ))}
-                      </select>
+                      />
+                      {selectedPreset && (
+                        <span className="preset-hint">
+                          Make it yours: replace the details in brackets.
+                        </span>
+                      )}
                     </div>
                     <div className="generate-action">
                       <span>5 channels · 2 credits</span>

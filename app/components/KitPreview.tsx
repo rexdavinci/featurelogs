@@ -1,48 +1,186 @@
 "use client";
 
-import { Linkedin } from "./SocialIcons";
 import { useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { ArrowDown, Check, Copy, FileText, GitCommitHorizontal, Mail, Sparkles } from "lucide-react";
+import { ArrowDown, Check, Copy, FileText, Mail, Sparkles } from "lucide-react";
+import { Linkedin } from "./SocialIcons";
 
-const EXAMPLES = {
-  changelog: { label: "Changelog", icon: FileText, title: "Small updates. A better everyday.", body: "A few things we shipped this week:\n\n✦ Dark mode, for your late-night ideas.\n✦ A faster dashboard. Less waiting, more doing.\n✦ CSV exports. Your data, wherever you need it.\n\nBuilt with your feedback. Keep it coming." },
-  x: { label: "X / Twitter", icon: GitCommitHorizontal, title: "Another week, another little leap.", body: "Shipped dark mode, a faster dashboard, and CSV exports this week.\n\nNone of these were on our original roadmap. All of them came from listening to the people using our product.\n\nWhat’s one small feature that made a big difference for you?\n\n#buildinpublic #indiehacker" },
-  linkedin: { label: "LinkedIn", icon: Linkedin, title: "The best roadmap starts with listening.", body: "This week, we turned three pieces of user feedback into shipped features: dark mode, a faster dashboard, and CSV exports.\n\nSmall improvements add up. Our goal is simple: make the product a little more useful every time you open it.\n\nWhat have you learned from your users this week?" },
-  email: { label: "Email", icon: Mail, title: "A little update from the workshop", body: "Hey there,\n\nWe’ve been busy making your everyday workflow a little smoother. Dark mode is here, the dashboard loads faster, and you can now take your data with you using CSV exports.\n\nTry them out and let us know what you think. Your feedback helps us decide what to build next.\n\nSee you in the next update!" },
-};
+const STORIES = [
+  {
+    name: "An app",
+    product: "Gather",
+    type: "Booking app",
+    notes: [
+      "Added one-click rebooking",
+      "Customers can save a favorite time",
+      "Available to all customers today",
+    ],
+    title: "Your next booking. Already easier.",
+    changelog:
+      "A little less planning. A little more doing.\n\nYou can now rebook in one click and save your favorite time. No more starting from scratch every visit.\n\nAvailable today for everyone using Gather.",
+    linkedin:
+      "The best improvements often start with a simple question: why does this take so many steps?\n\nOur latest Gather update brings one-click rebooking and saved time preferences to every customer.\n\nFewer steps between you and the things you want to do. That’s progress worth sharing.",
+    email:
+      "Subject: Same time next week?\n\nYour next booking just got easier. Rebook in one click, or save your favorite time for later.\n\nOpen Gather to try it. We’d love to hear what you think.",
+  },
+  {
+    name: "A collection",
+    product: "Fieldwork",
+    type: "Everyday essentials",
+    notes: [
+      "New everyday tote collection",
+      "Two sizes, three colors",
+      "Available in our store on Friday",
+    ],
+    title: "Made for wherever the day takes you.",
+    changelog:
+      "Meet the everyday tote collection.\n\nTwo sizes. Three colors. A place for the things you carry from one part of your day to the next.\n\nExplore the collection in our store this Friday.",
+    linkedin:
+      "A new chapter for Fieldwork: our everyday tote collection arrives Friday.\n\nWe kept the idea simple. A useful bag, in two sizes and three colors, for the way your day actually unfolds.\n\nWe can’t wait to see where you take it.",
+    email:
+      "Subject: Something new for your everyday\n\nOur new tote collection arrives this Friday.\n\nChoose from two sizes and three colors. Find your everyday companion in the Fieldwork store.",
+  },
+  {
+    name: "A course",
+    product: "First Chapter",
+    type: "Learning resource",
+    notes: [
+      "New self-paced writing course",
+      "Six lessons with practice prompts",
+      "Enrollment opens Monday",
+    ],
+    title: "Your first chapter starts here.",
+    changelog:
+      "A new way to start writing.\n\nOur self-paced course includes six lessons and practice prompts to help you turn a blank page into a writing habit.\n\nEnrollment opens Monday. Learn at your own pace.",
+    linkedin:
+      "Starting is often the hardest part of writing.\n\nThat’s why we created First Chapter: six self-paced lessons, each paired with a practice prompt. A little structure to help you keep going.\n\nEnrollment opens Monday. Your story can start here.",
+    email:
+      "Subject: Make room for your writing\n\nFirst Chapter opens for enrollment on Monday.\n\nSix lessons. Practical writing prompts. Your own pace.\n\nIf you’ve been waiting to start, this is your invitation.",
+  },
+];
+const CHANNELS = [
+  { id: "changelog", label: "Update", icon: FileText },
+  { id: "linkedin", label: "LinkedIn", icon: Linkedin },
+  { id: "email", label: "Email", icon: Mail },
+] as const;
 
 export function KitPreview() {
-  const [active, setActive] = useState<keyof typeof EXAMPLES>("changelog");
+  const [storyIndex, setStoryIndex] = useState(0);
+  const [active, setActive] = useState<"changelog" | "linkedin" | "email">(
+    "changelog",
+  );
   const [copyStatus, setCopyStatus] = useState("");
-  const example = EXAMPLES[active];
-
-  async function copyExample() {
-    try {
-      await navigator.clipboard.writeText(`${example.title}\n\n${example.body}`);
-      setCopyStatus("Copied to clipboard");
-    } catch {
-      setCopyStatus("Could not copy. Select the text to copy manually.");
-    }
-  }
-
+  const story = STORIES[storyIndex];
   return (
-    <div className="kit-preview" id="example">
-      <div className="preview-topline"><span className="window-dots" aria-hidden="true"><i /><i /><i /></span><span>FROM SHIPPED TO SHARED</span><span className="preview-live"><span /> Example kit</span></div>
-      <div className="preview-input">
-        <div className="preview-label"><GitCommitHorizontal size={15} /><span>Your rough notes</span><span className="mono-tag">release.md</span></div>
-        <p><span>+</span> added dark mode<br /><span>+</span> improved dashboard load time<br /><span>+</span> shipped CSV exports</p>
+    <div className="release-demo" id="example">
+      <div className="demo-toolbar">
+        <span>
+          <span className="status-dot" /> THE UPDATE STUDIO
+        </span>
+        <span>Interactive example</span>
       </div>
-      <div className="preview-connector"><span /><span className="connector-label"><Sparkles size={13} /> A little AI. A lot of you.</span><span /><ArrowDown size={14} /></div>
-      <Tabs.Root value={active} onValueChange={(value) => { setActive(value as keyof typeof EXAMPLES); setCopyStatus(""); }}>
-        <div className="preview-output-heading"><span className="preview-label"><span className="output-icon"><Sparkles size={14} /></span>Your marketing kit</span><span className="ready-badge"><Check size={12} /> Ready to make yours</span></div>
-        <Tabs.List className="preview-tabs" aria-label="Example marketing kit channels">
-          {Object.entries(EXAMPLES).map(([key, item]) => <Tabs.Trigger key={key} value={key}><item.icon size={14} />{item.label}</Tabs.Trigger>)}
+      <p className="demo-instructions">Try a product type, then switch channels to see its drafts.</p>
+      <div
+        className="demo-scenarios"
+        role="group"
+        aria-label="Example product type"
+      >
+        {STORIES.map((item, index) => (
+          <button
+            key={item.name}
+            aria-pressed={index === storyIndex}
+            onClick={() => {
+              setStoryIndex(index);
+              setCopyStatus("");
+            }}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+      <div className="demo-notes">
+        <div className="demo-note-label">
+          <span>01 / YOUR NOTES</span>
+          <span>
+            {story.product} · {story.type}
+          </span>
+        </div>
+        <ul>
+          {story.notes.map((note) => (
+            <li key={note}>
+              <span>+</span>
+              {note}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="demo-transform">
+        <span />
+        <span>
+          <Sparkles size={13} /> A clearer story, in your voice
+        </span>
+        <span />
+        <ArrowDown size={14} />
+      </div>
+      <Tabs.Root
+        value={active}
+        onValueChange={(value) => {
+          setActive(value as typeof active);
+          setCopyStatus("");
+        }}
+      >
+        <div className="demo-output-label">
+          <span>02 / READY TO MAKE YOURS</span>
+          <span>
+            <Check size={12} /> Example draft
+          </span>
+        </div>
+        <Tabs.List
+          className="demo-channel-tabs"
+          aria-label="Example update channels"
+        >
+          {CHANNELS.map((channel) => (
+            <Tabs.Trigger key={channel.id} value={channel.id}>
+              <channel.icon size={14} />
+              {channel.label}
+            </Tabs.Trigger>
+          ))}
         </Tabs.List>
-        {Object.entries(EXAMPLES).map(([key, item]) => <Tabs.Content key={key} value={key} className="preview-copy"><div className="preview-copy-meta"><span>PRODUCT UPDATE</span><span>Draft · Example</span></div><h3>{item.title}</h3><p>{item.body}</p></Tabs.Content>)}
+        {CHANNELS.map((channel) => (
+          <Tabs.Content
+            key={`${channel.id}-${storyIndex}`}
+            value={channel.id}
+            className="demo-output"
+          >
+            <span className="demo-product-name">
+              {story.product.toUpperCase()} / PRODUCT UPDATE
+            </span>
+            <h3>{story.title}</h3>
+            <p>{story[channel.id]}</p>
+          </Tabs.Content>
+        ))}
       </Tabs.Root>
-      <div className="preview-bottom"><span><span className="tiny-avatar">Y</span> Your story. Your voice.</span><button type="button" onClick={copyExample}><Copy size={13} />{copyStatus === "Copied to clipboard" ? "Copied!" : "Copy draft"}</button></div>
-      <p className="sr-only" role="status">{copyStatus}</p>
+      <div className="demo-footer">
+        <span>Illustrative products · Sample content</span>
+        <button
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(
+                `${story.title}\n\n${story[active]}`,
+              );
+              setCopyStatus("Copied!");
+            } catch {
+              setCopyStatus("Select the draft to copy manually.");
+            }
+          }}
+        >
+          <Copy size={13} />
+          {copyStatus === "Copied!" ? "Copied!" : "Copy draft"}
+        </button>
+      </div>
+      <span className="sr-only" role="status">
+        {copyStatus}
+      </span>
     </div>
   );
 }
