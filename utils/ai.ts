@@ -34,12 +34,12 @@ function fallbackGeneration(args: GenerateContentArgs): GenerationResult {
     .join("\n");
 
   return {
-    changelog: `## ${projectName} Update\n\n${bullets || "- Improved stability and polished release quality."}`,
+    changelog: `## ${projectName} Update\n\n${bullets || "- Add the details of your update here."}`,
     twitterMessages: [
       `Shipping update for ${projectName}:\n\n${rawInput.slice(0, 200)}\n\n${templates.twitter.hashtags}`,
     ],
-    linkedin: `We pushed another release for ${projectName}.\n\n${rawInput.slice(0, 420)}\n\n${templates.linkedin.cta}`,
-    helpFaq: `### FAQ: ${projectName} release\n\n- **What changed?** ${rawInput.slice(0, 220)}\n- **How do I use it?** Follow the latest release guide.\n- **Need help?** ${templates.helpFaq.cta}`,
+    linkedin: `Here’s what’s new with ${projectName}.\n\n${rawInput.slice(0, 420)}\n\n${templates.linkedin.cta}`,
+    helpFaq: `### FAQ: ${projectName} release\n\n- **What changed?** ${rawInput.slice(0, 220)}\n- **How do I use it?** Review the update details above.\n- **Need help?** ${templates.helpFaq.cta}`,
     emailNewsletter: `Subject: ${projectName} weekly update\n\n${rawInput.slice(0, 500)}\n\n${templates.emailNewsletter.cta}`,
   };
 }
@@ -72,9 +72,11 @@ export async function generateContent(
     return fallbackGeneration(args);
   }
 
-  const prompt = `You are an expert Chief Marketing Officer (CMO) and Technical Writer for SaaS startups.
-Your goal is to turn technical, messy, raw git commits or quick informal text descriptions written by software founders into highly polished, engaging, and professional public-facing marketing copy and documentation.
-Given the following raw input from a founder about what they built:
+  const prompt = `You are a product communications editor for products, services, software, courses, collections, and communities.
+Turn rough product notes into clear, useful, on-brand public updates. Adapt to the type of product and its actual audience; do not assume it is software or SaaS.
+Use only facts supplied in the input. Do not invent metrics, dates, links, names, testimonials, availability, or capabilities. Treat bracketed placeholders as missing information; omit unsupported details or flag them for review. Honor the per-channel voice settings below; do not impose developer jargon, hashtags, or emojis.
+Project name: ${projectName}
+Given the following product update notes:
 ---
 ${rawInput}
 ---
@@ -85,7 +87,7 @@ Instantly generate the following 5 distinct, high-quality deliverables in JSON f
 Expected JSON output format:
 {
   "changelog": "A polished, public-facing Markdown changelog entry. Focus on user benefits, what problem it solves, and how to use it. Highlight the feature with neat bullet points, styled with spacious headers. Do not include any emojis or hashtags.",
-  "linkedin": "A hook-driven LinkedIn post. Start with a scroll-stopping hook, followed by a clear breakdown of the benefits, and end with an engaging call-to-action (CTA). Use 3-5 relevant emojis and 3-4 hashtags. Keep paragraphs short (1-2 sentences) and spacious.",
+  "linkedin": "A hook-driven LinkedIn post. Start with a scroll-stopping hook, followed by a clear breakdown of the benefits, and end with an engaging call-to-action (CTA). Use emojis and hashtags only when appropriate to the supplied voice settings. Keep paragraphs short (1-2 sentences) and spacious.",
   "twitterMessages": [
     "Tweet 1: Scroll-stopping hook announcing the update. Snappy, value-driven, ending with (1/4)",
     "Tweet 2: The pain point. Explain what makes this feature necessary. Ending with (2/4)",
@@ -93,7 +95,7 @@ Expected JSON output format:
     "Tweet 4: The call to action. Spark excitement and tell them to try it now. Ending with (4/4)"
   ],
   "helpFaq": "An updated draft for their Help Center/FAQ documentation in clean Markdown. Include sections like: 'Overview', 'How to use it', and 'FAQ' (with 2 common questions and answers).",
-  "emailNewsletter": "A personalized email newsletter update for their existing users. Include: 'Subject: <Catchy, high-open-rate subject line>', a warm opening ('Hey everyone, <Founder Name> here!'), an exciting, benefit-driven breakdown, and a clear CTA button/link."
+  "emailNewsletter": "A personalized email newsletter update for their existing users. Include: 'Subject: <Catchy, high-open-rate subject line>', a warm opening without inventing a sender name, an exciting, benefit-driven breakdown, and a clear CTA; include a link only if supplied."
 }`;
 
   const response = await generateText({
@@ -126,7 +128,9 @@ Expected JSON output format:
       ),
       linkedin: String(parsed.linkedin ?? templates.linkedin.cta),
       helpFaq: String(parsed.helpFaq ?? templates.helpFaq.cta),
-      emailNewsletter: String(parsed.emailNewsletter ?? templates.emailNewsletter.cta),
+      emailNewsletter: String(
+        parsed.emailNewsletter ?? templates.emailNewsletter.cta,
+      ),
     };
   } catch {
     return fallbackGeneration(args);
@@ -146,9 +150,9 @@ export async function generateMonthlyNewsletterFromChangelogs(args: {
     return `## Monthly FeatureLogs Recap\n\n${sourceText.slice(0, 1600)}\n\n${templates.monthlyRecap.cta}`;
   }
 
-  const prompt = `You are an expert Chief Marketing Officer (CMO) and Technical Writer for SaaS startups.
-Your goal is to turn technical, messy, raw git commits or quick informal text descriptions written by software founders into highly polished, engaging, and professional monthly newsletters.
-Given the following raw changelog entries from a founder about what they built:
+  const prompt = `You are a product communications editor for products, services, software, courses, collections, and communities.
+Summarize supplied updates into a clear monthly newsletter for the product’s actual audience. Do not assume the product is software or SaaS. Do not invent claims, dates, links, names, or results. Honor the provided voice settings.
+Given these product update entries:
 ---
 ${sourceText}
 ---
