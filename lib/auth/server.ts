@@ -35,3 +35,10 @@ export const getAuthSessionUser = async (
 export const revokeAuthSession = async (
   ...args: Parameters<AuthAdapter["revokeSession"]>
 ): Promise<void> => (await getAuthAdapter()).revokeSession(...args);
+
+export const requestAuthPasswordReset = async (email: string): Promise<void> =>
+  (await getAuthAdapter()).requestPasswordReset(email);
+export const resetAuthPassword = async (
+  token: string,
+  password: string,
+): Promise<void> => (await getAuthAdapter()).resetPassword(token, password);

@@ -5,6 +5,12 @@ const unsupportedPasswordAuthError =
 
 export const firebaseAuthAdapter: AuthAdapter = {
   supportsPasswordAuth: false,
+  async requestPasswordReset() {
+    throw new Error(unsupportedPasswordAuthError);
+  },
+  async resetPassword() {
+    throw new Error(unsupportedPasswordAuthError);
+  },
   async loginWithPassword() {
     throw new Error(unsupportedPasswordAuthError);
   },

@@ -16,8 +16,13 @@ export type AuthSession = {
 
 export interface AuthAdapter {
   supportsPasswordAuth: boolean;
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(token: string, password: string): Promise<void>;
   loginWithPassword(email: string, password: string): Promise<AuthPasswordUser>;
-  signupWithPassword(email: string, password: string): Promise<AuthPasswordUser>;
+  signupWithPassword(
+    email: string,
+    password: string,
+  ): Promise<AuthPasswordUser>;
   createSession(userId: string): Promise<AuthSession>;
   getSessionUser(sessionToken: string): Promise<AuthSessionUser | null>;
   revokeSession(sessionToken: string): Promise<void>;

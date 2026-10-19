@@ -7,8 +7,8 @@ test("configuration defaults to offline drafts and preserves existing database/a
   assert.equal(config.ai.provider, "mock");
   assert.equal(config.database.provider, "firestore");
   assert.equal(config.auth.provider, "neon");
-  assert.equal(config.email.provider, "none");
-  assert.equal(config.email.implemented, false);
+  assert.equal(config.email.provider, "resend");
+  assert.equal(config.email.implemented, true);
 });
 test("explicit AI selection uses only the matching credentials and a provider-specific model", () => {
   const keys = {

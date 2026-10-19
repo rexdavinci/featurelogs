@@ -1,63 +1,30 @@
-import {
-  randomBytes,
-  scryptSync,
-  timingSafeEqual,
-  createHash,
-} from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { getNeonDb } from "@/lib/db/neon/client";
+import {
+  hashPassword,
+  verifyPassword,
+  validateEmail,
+  validatePassword,
+} from "./password";
+import { requestPasswordReset, resetPassword } from "./password-reset";
 import { authSessions, authUsers } from "@/lib/db/neon/schema";
-import type { AuthAdapter, AuthSession, AuthSessionUser } from "@/lib/auth/types";
+import type {
+  AuthAdapter,
+  AuthSession,
+  AuthSessionUser,
+} from "@/lib/auth/types";
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 5;
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-function validateCredentials(email: string, password: string) {
-  if (!email || !password) {
-    throw new Error("Email and password are required.");
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    throw new Error("Please enter a valid email address.");
-  }
-
-  if (password.length < 6) {
-    throw new Error("Password must be at least 6 characters.");
-  }
-}
-
-function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const digest = scryptSync(password, salt, 64).toString("hex");
-  return `scrypt:${salt}:${digest}`;
-}
-
-function verifyPassword(password: string, storedHash: string) {
-  const [algorithm, salt, digest] = storedHash.split(":");
-  if (algorithm !== "scrypt" || !salt || !digest) {
-    return false;
-  }
-
-  const actual = scryptSync(password, salt, 64);
-  const expected = Buffer.from(digest, "hex");
-  if (actual.length !== expected.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actual, expected);
-}
 
 function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
 async function registerWithNeonAuth(email: string, password: string) {
-  validateCredentials(email, password);
+  validatePassword(password);
   const neonDb = getNeonDb();
-  const normalized = normalizeEmail(email);
+  const normalized = validateEmail(email);
 
   const existing = await neonDb
     .select({ id: authUsers.id })
@@ -84,9 +51,9 @@ async function registerWithNeonAuth(email: string, password: string) {
 }
 
 async function loginWithNeonAuth(email: string, password: string) {
-  validateCredentials(email, password);
+  validatePassword(password);
   const neonDb = getNeonDb();
-  const normalized = normalizeEmail(email);
+  const normalized = validateEmail(email);
 
   const rows = await neonDb
     .select()
@@ -165,6 +132,8 @@ async function deleteNeonAuthSession(sessionToken: string) {
 
 export const neonAuthAdapter: AuthAdapter = {
   supportsPasswordAuth: true,
+  requestPasswordReset,
+  resetPassword,
   async loginWithPassword(email, password) {
     return loginWithNeonAuth(email, password);
   },

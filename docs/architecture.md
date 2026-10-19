@@ -6,7 +6,7 @@
 
 Provider-specific credentials are checked when that provider is used. This allows public pages and Neon-only deployments to load without Firebase initialization. Unknown selector values fail with a useful error that does not echo the configured value. CLI/framework settings such as Drizzle's connection and Next's development watcher are read in their standalone tool configuration.
 
-Email selections are reserved metadata. There is no email adapter or sending workflow yet.
+Email defaults to Resend. `lib/email/types.ts` defines the transport contract; `lib/email/server.ts` validates configuration and caches the selected adapter. Other email selectors are reserved until their transports are implemented.
 
 ## AI request path
 
@@ -53,3 +53,14 @@ Adding another implementation requires the interface, a selector, and a factory 
 ## Verification
 
 `npm test` covers selector validation, immutable/cached configuration, legacy configuration, both workflow result contracts, malformed output, safe failures, token normalization, offline generation, real SDK parsing with mocked HTTP responses, and Neon loading without Firebase credentials. It makes no external service calls. Paid model output quality and real database connectivity still need deployment-specific smoke tests.
+
+## Password recovery
+
+`lib/auth/password.ts` owns password confirmation, validation, and the existing scrypt format.
+The Neon adapter delegates recovery to `lib/auth/password-reset.ts`. Its injectable service is tested
+against an isolated embedded Postgres instance. A database UPSERT enforces the per-email cooldown
+across app workers. A single data-modifying CTE consumes a valid reset token, updates the password,
+and revokes sessions in one atomic statement. Failed email delivery removes only its matching token.
+The action always gives the same response for registered and unknown addresses, including operational failures;
+operators should monitor the generic server error. Optional Upstash adds a shared request IP limit.
+No migration to Neon's managed Better Auth is implied by the `neon` selector.

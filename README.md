@@ -28,9 +28,9 @@ Set environment variables in `.env.local` or your hosting platform. [`.env.ts`](
 | Model            | `AI_MODEL`       | A model supported by the selected provider |
 | Database         | `DB_PROVIDER`    | `neon`, `firestore`                        |
 | Authentication   | `AUTH_PROVIDER`  | `neon`, `firebase`                         |
-| Email (reserved) | `EMAIL_PROVIDER` | `none`, `resend`, `postmark`, `smtp`       |
+| Email | `EMAIL_PROVIDER` | `none`, `resend`, `postmark`, `smtp`       |
 
-**Email sending is not implemented.** Selecting an email provider only reserves configuration for a future transport. It does not send email, create accounts with a provider, or enable email authentication.
+**Resend is the default email adapter.** Set `RESEND_API_KEY`, `EMAIL_FROM` (a sender on a verified Resend domain), and `SITE_URL` (the public app origin). Other email selections are placeholders and fail explicitly until implemented. Never use a public environment variable for the API key.
 
 Examples:
 
@@ -98,3 +98,19 @@ Tests mock provider HTTP responses; they do not call paid AI services or your da
 Generate schema migrations with `npm run db:generate`; apply them with `npm run db:migrate`. Next.js loads runtime `.env` values; the Drizzle CLI separately loads them with `@next/env` before reading its connection string.
 
 Never commit `.env.local` or service-account credentials. For vulnerability reporting, see [SECURITY.md](SECURITY.md).
+
+### Password recovery
+
+Registration requires matching password confirmation. All password fields have show/hide controls.
+The login screen includes **Forgot password?**; the link opens `/reset-password` to choose and confirm a new password.
+
+Run `npm run db:migrate` before deploying to create `auth_password_resets`. Links expire after 15 minutes,
+are stored only as SHA-256 hashes, and are consumed atomically with the password update and session revocation.
+Only one link per email is active; requests have a persistent one-minute cooldown. Configure Upstash for an
+additional shared IP limit (5 requests per 15 minutes); without Upstash, the database email cooldown still applies.
+Request responses do not reveal whether an account exists. Delivery/configuration failures are logged generically on the server.
+Reset tokens travel in a URL fragment, keeping them out of HTTP access logs and referrers. Keep the reset page open until completion.
+
+The current `neon` auth adapter uses app-managed password/session tables in Neon Postgres. It is **not**
+Neon's managed Better Auth service. The server-action reset flow preserves existing accounts; switching to
+managed Better Auth would require a separate migration. Resend setup requires both an API key and a verified sender.

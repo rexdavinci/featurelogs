@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Require matching password confirmation at registration and add accessible show/hide controls to every password field.
+- Add forgot-password and reset-password screens backed by server actions, preserving existing Neon/Postgres accounts.
+- Add the Resend email adapter, defaulting to `EMAIL_PROVIDER=resend`, with `RESEND_API_KEY` and a verified `EMAIL_FROM` sender.
+- Protect recovery with hashed, single-use, 15-minute tokens, a persistent request cooldown, generic responses, and session revocation.
+- Add an isolated Postgres recovery test suite and a database migration for reset tokens.
+
 ## 0.2.2 — 2026-10-19
 
 FeatureLogs is easier to configure, extend, and self-host.

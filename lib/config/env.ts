@@ -69,6 +69,12 @@ export function parseEnv(source: Source) {
     gemini: "gemini-2.5-flash",
     mock: "local-template",
   };
+  const emailProvider = choice(
+    source,
+    "EMAIL_PROVIDER",
+    ["none", "resend", "postmark", "smtp"],
+    "resend",
+  );
   return Object.freeze({
     ai: Object.freeze({
       provider,
@@ -90,16 +96,11 @@ export function parseEnv(source: Source) {
     auth: Object.freeze({
       provider: choice(source, "AUTH_PROVIDER", ["neon", "firebase"], "neon"),
     }),
-    // Reserved configuration only. No provider sends email in this release.
     email: Object.freeze({
-      provider: choice(
-        source,
-        "EMAIL_PROVIDER",
-        ["none", "resend", "postmark", "smtp"],
-        "none",
-      ),
+      provider: emailProvider,
+      apiKey: value(source, "RESEND_API_KEY"),
       from: value(source, "EMAIL_FROM"),
-      implemented: false as const,
+      implemented: emailProvider === "resend",
     }),
     firebase: Object.freeze({
       projectId:

@@ -25,6 +25,14 @@ function getLimiters() {
   const redis = getRedis();
   limiters = new Map([
     [
+      "password-reset",
+      new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, "15 m"),
+        prefix: "featurelogs:password-reset",
+      }),
+    ],
+    [
       "generate",
       new Ratelimit({
         redis,
@@ -48,7 +56,7 @@ function getLimiters() {
 }
 
 export async function assertRateLimit(
-  scope: "generate" | "newsletter",
+  scope: "generate" | "newsletter" | "password-reset",
   id: string,
 ) {
   // Gracefully bypass rate limits during local development if Upstash keys are missing

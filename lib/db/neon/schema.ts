@@ -25,7 +25,9 @@ export const usageEvents = pgTable(
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull(),
     createdAt: text("created_at").notNull(),
   },
-  (table) => [index("usage_events_user_created_idx").on(table.userId, table.createdAt)],
+  (table) => [
+    index("usage_events_user_created_idx").on(table.userId, table.createdAt),
+  ],
 );
 
 export const logs = pgTable(
@@ -83,7 +85,9 @@ export const authUsers = pgTable(
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
-  (table) => [index("auth_users_email_normalized_idx").on(table.emailNormalized)],
+  (table) => [
+    index("auth_users_email_normalized_idx").on(table.emailNormalized),
+  ],
 );
 
 export const authSessions = pgTable(
@@ -104,3 +108,12 @@ export const authSessions = pgTable(
 export type NeonProjectRow = typeof projects.$inferSelect;
 export type NeonProfileRow = typeof profiles.$inferSelect;
 export type NeonUserProfile = UserProfile;
+
+// One active link per normalized email; also enforces a persistent request cooldown.
+export const authPasswordResets = pgTable("auth_password_resets", {
+  emailNormalized: text("email_normalized").primaryKey(),
+  userId: text("user_id"),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: text("expires_at").notNull(),
+  requestedAt: text("requested_at").notNull(),
+});

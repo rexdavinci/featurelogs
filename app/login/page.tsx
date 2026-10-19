@@ -50,7 +50,13 @@ export default async function LoginPage({
         </section>
         <AuthCard
           key={mode ?? "login"}
-          initialMode={mode === "signup" ? "signup" : "login"}
+          initialMode={
+            mode === "forgot"
+              ? "forgot"
+              : mode === "signup"
+                ? "signup"
+                : "login"
+          }
         />
       </div>
     </main>
