@@ -11,8 +11,9 @@ Use Node.js 20.9+ and npm.
 ```sh
 npm ci
 cp .env.example .env.local
-# Fill DATABASE_URL and provision the tables before creating an account.
+# Fill DATABASE_ADMIN_URL with the owner connection for initial setup.
 npm run db:migrate
+npm run db:secure
 npm run dev
 ```
 
@@ -58,7 +59,7 @@ For existing installations without `AI_PROVIDER`, the old OpenRouter behavior is
 
 ### Storage and authentication
 
-- `DB_PROVIDER=neon`: set `DATABASE_URL` and run `npm run db:migrate`.
+- `DB_PROVIDER=neon`: migrate with `DATABASE_ADMIN_URL`, then run `npm run db:secure` to provision a restricted runtime connection in `.env.local`. Restart the app.
 - `DB_PROVIDER=firestore`: set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_SERVICE_KEY`. Escaped `\n` characters in the private key are normalized. The old `NEXT_PUBLIC_FIREBASE_PROJECT_ID` name remains an alias.
 - `AUTH_PROVIDER=neon`: app-managed password accounts and sessions stored in Postgres; this requires `DATABASE_URL` even with Firestore storage. This adapter is not the hosted Neon Auth product.
 - `AUTH_PROVIDER=firebase`: verifies existing Firebase ID tokens or session cookies. Password signup/login and session creation are not implemented by this adapter.
@@ -114,3 +115,35 @@ Reset tokens travel in a URL fragment, keeping them out of HTTP access logs and 
 The current `neon` auth adapter uses app-managed password/session tables in Neon Postgres. It is **not**
 Neon's managed Better Auth service. The server-action reset flow preserves existing accounts; switching to
 managed Better Auth would require a separate migration. Resend setup requires both an API key and a verified sender.
+
+### Account data and row-level security
+
+Signed-in users can open **Settings** to download all their stored data as JSON, then choose whether
+to delete their account. Deletion requires the current password and typing `DELETE`. Both operations
+currently require Neon storage **and** Neon auth; mixed/Firebase deployments show an explicit limitation
+instead of performing a partial wipe. Exports omit password hashes and session/reset token hashes.
+
+RLS is enabled and forced on all eight application tables. Runtime connections must be a non-owner,
+non-superuser role without BYPASSRLS or CREATEROLE. Each query runs inside a transaction with a fixed
+role and transaction-local user context derived from the server-verified session. Auth operations use
+a separate auth-only role. Public ranking uses a fixed aggregate function; raw private drafts stay protected.
+The runtime still trusts the server and its secret connection string. This does not expose Postgres directly to browsers
+or configure a client-facing Neon Data API/JWT authorization system.
+
+For existing installations:
+
+1. Keep the current owner URL as `DATABASE_ADMIN_URL` in your migration environment.
+2. Run `npm run db:migrate`, then `npm run db:secure` locally. The provisioning script writes a restricted
+   `DATABASE_URL` into your ignored `.env.local` and generates a new runtime password. Running it again rotates that password.
+3. Deploy the restricted `DATABASE_URL` to the app. Keep `DATABASE_ADMIN_URL` out of the runtime deployment.
+4. Restart all app instances. Never run the app using an owner connection; the client refuses it.
+
+Use migrations for schema changes. `db:push` is disabled because schema introspection does not preserve
+this custom SQL security migration. Apply migrations before deploying the new app code. Security policies and
+new auth foreign keys do not delete existing data; legacy orphan rows are preserved with `NOT VALID` constraints.
+
+Account deletion removes the user's live profile, projects, logs, templates, usage history, password-reset records,
+sessions, and auth account in one transaction. All workspace writes serialize against deletion; removed accounts
+cannot recreate data through an in-flight generation request. Password checks have a persistent five-attempt
+limit per 15 minutes, with optional Upstash rate limits too. Deletion does not purge deployment backups or
+records independently retained by email/AI providers; deployment owners must define those retention policies.

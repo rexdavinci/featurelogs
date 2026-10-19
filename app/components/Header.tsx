@@ -22,7 +22,7 @@ export function Header({ usageCount, userEmail }: HeaderProps) {
     ? [
         { href: "/dashboard", label: "Workspace" },
         { href: "/ranking", label: "Community" },
-        { href: "/use-cases", label: "Use cases" },
+        { href: "/settings", label: "Settings" },
       ]
     : [
         { href: "/#how-it-works", label: "How it works" },

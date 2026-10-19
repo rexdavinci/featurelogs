@@ -29,7 +29,7 @@ Dashboard server action
 - Metadata: `provider`, `model`, `usage.inputTokens`, `usage.outputTokens`.
 - Unknown usage is `null`, not zero.
 
-The JSON normalizer accepts plain JSON or a single Markdown JSON fence. All required kit fields must be nonempty strings. The X thread must be a nonempty array of nonempty strings. Responses are trimmed; objects and numbers are rejected instead of coerced. Every returned post is preserved. The shared prompt currently requests four posts; the normalizer does not impose a four-post limit.
+The JSON normalizer accepts plain JSON or a single Markdown JSON fence. All required kit fields must be nonempty strings. The X thread must be a nonempty array of nonempty strings. Responses are trimmed; objects and numbers are rejected instead of coerced. Every returned post is preserved. The shared prompt requests a short thread; the normalizer does not impose a fixed post limit.
 
 Errors use `AiError` with `configuration`, `provider_error`, or `invalid_response` codes. Provider-specific exceptions are replaced with a safe error; their payloads and credentials are not exposed. Dashboard actions do not consume AI/save credits or persist a kit when generation or validation fails. Existing project creation charges, if applicable, happen before generation.
 
@@ -64,3 +64,25 @@ and revokes sessions in one atomic statement. Failed email delivery removes only
 The action always gives the same response for registered and unknown addresses, including operational failures;
 operators should monitor the generic server error. Optional Upstash adds a shared request IP limit.
 No migration to Neon's managed Better Auth is implied by the `neon` selector.
+
+## Account lifecycle and Neon isolation
+
+`lib/db/neon/client.ts` uses the existing `pg` dependency with Drizzle transactions so role and identity
+settings cannot leak across pooled requests. It refuses privileged or table-owning runtime credentials.
+`withNeonUserDb` sets the app role and user ID, acquires a per-account transaction lock, and checks that
+the auth account still exists. `withNeonAuthDb` grants access only to auth tables. The custom RLS migration
+forces policies on all eight app tables and rejects cross-project writes. Auth hash columns are inaccessible
+to the workspace role. The public-ranking function is a fixed, fully-qualified security-definer aggregate with
+an empty search path and no public EXECUTE privilege; only the workspace role may call it.
+
+`lib/account/neon.ts` exports an allowlisted account snapshot and deletes every owned category under the
+same user context. Account deletion and normal writes share the lock, preventing post-deletion resurrection.
+Auth session/reset foreign keys cascade on deletion and validate all new writes. Existing orphan rows are
+preserved by NOT VALID constraints. `app/settings/actions.ts` derives identity only from the session,
+requires password reauthentication plus explicit confirmation, and clears the session cookie after commit.
+Export is a private, no-store attachment route. Unsupported mixed-provider configurations fail closed.
+
+Migration credentials use `DATABASE_ADMIN_URL`; `db:secure` provisions the separate restricted runtime login.
+The server is trusted to establish tenant context. These policies do not accept identity directly from a browser
+and do not replace access checks in server actions. The security tests run real policies, exports, deletion,
+rollback, and password resets in an isolated PGlite Postgres database.

@@ -75,7 +75,7 @@ export function createPasswordResetService({
     const tokenHash = hashResetToken(token);
     const passwordHash = hashPassword(password);
     const now = new Date(clock()).toISOString();
-    // One statement is one transaction with neon-http. DELETE claims the link;
+    // The statement runs in one scoped transaction. DELETE claims the link;
     // concurrent submissions cannot both update the password. Revoke all sessions.
     const result = await database().execute<{ id: string }>(sql`
     WITH consumed AS (

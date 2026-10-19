@@ -6,6 +6,8 @@ EventEmitter.defaultMaxListeners = 20;
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Auth actions include passwords/tokens; never log invocation arguments in development.
+  logging: { serverFunctions: false },
   typescript: {
     ignoreBuildErrors: false,
   },

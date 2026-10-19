@@ -3,7 +3,8 @@ import { defineConfig } from "drizzle-kit";
 
 loadEnvConfig(process.cwd());
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl =
+  process.env.DATABASE_ADMIN_URL?.trim() || process.env.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error(

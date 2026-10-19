@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; deleted?: string }>;
 }) {
   if (await getSessionUser()) redirect("/dashboard");
-  const { mode } = await searchParams;
+  const { mode, deleted } = await searchParams;
   return (
     <main className="auth-shell">
       <Header />
@@ -48,16 +48,26 @@ export default async function LoginPage({
             <ArrowLeft size={14} /> Back to FeatureLogs
           </Link>
         </section>
-        <AuthCard
-          key={mode ?? "login"}
-          initialMode={
-            mode === "forgot"
-              ? "forgot"
-              : mode === "signup"
-                ? "signup"
-                : "login"
-          }
-        />
+        <div>
+          {deleted === "1" && (
+            <p
+              role="status"
+              className="mb-4 rounded-xl border border-(--success-border) bg-(--success-surface) p-4 text-sm text-(--hope)"
+            >
+              Your account and live app data have been deleted.
+            </p>
+          )}
+          <AuthCard
+            key={mode ?? "login"}
+            initialMode={
+              mode === "forgot"
+                ? "forgot"
+                : mode === "signup"
+                  ? "signup"
+                  : "login"
+            }
+          />
+        </div>
       </div>
     </main>
   );

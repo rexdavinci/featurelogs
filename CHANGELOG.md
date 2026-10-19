@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add account settings with a complete JSON export and password-confirmed permanent account deletion for Neon deployments.
+- Enable and force RLS on all application tables, isolate auth access, and provision a restricted database runtime role.
+- Serialize account deletion against workspace writes, remove all live account data atomically, and invalidate every session.
+- Add tenant-isolation, export redaction, cross-project write, rollback, and deletion tests.
+
 - Require matching password confirmation at registration and add accessible show/hide controls to every password field.
 - Add forgot-password and reset-password screens backed by server actions, preserving existing Neon/Postgres accounts.
 - Add the Resend email adapter, defaulting to `EMAIL_PROVIDER=resend`, with `RESEND_API_KEY` and a verified `EMAIL_FROM` sender.

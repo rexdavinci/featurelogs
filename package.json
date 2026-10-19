@@ -9,8 +9,9 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "test": "node --conditions=react-server --import tsx --test tests/*.test.mjs"
+    "db:push": "node -e \"console.error('Use db:generate and db:migrate; db:push does not preserve the custom RLS security migration.'); process.exit(1)\"",
+    "test": "node --conditions=react-server --import tsx --test tests/*.test.mjs",
+    "db:secure": "node scripts/secure-database.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.11.0",
