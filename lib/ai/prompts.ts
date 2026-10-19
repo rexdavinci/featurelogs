@@ -22,10 +22,9 @@ Expected JSON output format:
   "changelog": "A polished, public-facing Markdown changelog entry. Focus on user benefits, what problem it solves, and how to use it. Highlight the feature with neat bullet points, styled with spacious headers. Do not include any emojis or hashtags.",
   "linkedin": "A hook-driven LinkedIn post. Start with a scroll-stopping hook, followed by a clear breakdown of the benefits, and end with an engaging call-to-action (CTA). Use emojis and hashtags only when appropriate to the supplied voice settings. Keep paragraphs short (1-2 sentences) and spacious.",
   "twitterMessages": [
-    "Tweet 1: Scroll-stopping hook announcing the update. Snappy, value-driven, ending with (1/4)",
-    "Tweet 2: The pain point. Explain what makes this feature necessary. Ending with (2/4)",
-    "Tweet 3: The solution. Highlight 2 key benefits of how this solves the problem. Ending with (3/4)",
-    "Tweet 4: The call to action. Spark excitement and tell them to try it now. Ending with (4/4)"
+    "Tweet 1: Scroll-stopping hook announcing the update. Snappy, value-driven, ending with (1/3)",
+    "Tweet 2: The pain point. Explain what makes this feature necessary. Ending with (2/3)",
+    "Tweet 3: The solution. Highlight 2 key benefits of how this solves the problem. Ending with (3/3)",
   ],
   "helpFaq": "An updated draft for their Help Center/FAQ documentation in clean Markdown. Include sections like: 'Overview', 'How to use it', and 'FAQ' (with 2 common questions and answers).",
   "emailNewsletter": "A personalized email newsletter update for their existing users. Include: 'Subject: <Catchy, high-open-rate subject line>', a warm opening without inventing a sender name, an exciting, benefit-driven breakdown, and a clear CTA; include a link only if supplied."
