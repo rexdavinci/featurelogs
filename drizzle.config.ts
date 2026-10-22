@@ -1,5 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { defineConfig } from "drizzle-kit";
+import { normalizePostgresUrl } from "./lib/config/postgres.mjs";
 
 loadEnvConfig(process.cwd());
 
@@ -17,7 +18,7 @@ export default defineConfig({
   schema: "./lib/db/neon/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: databaseUrl,
+    url: normalizePostgresUrl(databaseUrl),
   },
   migrations: {
     schema: "public",

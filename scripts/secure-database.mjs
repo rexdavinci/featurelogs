@@ -3,10 +3,12 @@ import nextEnv from "@next/env";
 import { Client } from "pg";
 import { randomBytes } from "node:crypto";
 import { readFile, writeFile, chmod } from "node:fs/promises";
+import { normalizePostgresUrl } from "../lib/config/postgres.mjs";
 nextEnv.loadEnvConfig(process.cwd());
-const adminUrl =
+const configuredUrl =
   process.env.DATABASE_ADMIN_URL?.trim() || process.env.DATABASE_URL;
-if (!adminUrl) throw new Error("DATABASE_ADMIN_URL is required.");
+if (!configuredUrl) throw new Error("DATABASE_ADMIN_URL is required.");
+const adminUrl = normalizePostgresUrl(configuredUrl);
 const client = new Client({ connectionString: adminUrl });
 try {
   await client.connect();

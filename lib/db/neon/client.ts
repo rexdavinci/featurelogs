@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { env } from "@/.env";
+import { normalizePostgresUrl } from "@/lib/config/postgres.mjs";
 
 export type NeonTransaction = Parameters<
   Parameters<ReturnType<typeof drizzle>["transaction"]>[0]
@@ -14,7 +15,7 @@ function getDatabase() {
     if (!env.database.url)
       throw new Error("DATABASE_URL is required for Neon.");
     const pool = new Pool({
-      connectionString: env.database.url,
+      connectionString: normalizePostgresUrl(env.database.url),
       max: 10,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
