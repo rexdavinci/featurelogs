@@ -70,6 +70,18 @@ test("malformed, incomplete, and non-string kit fields are rejected instead of s
     code: "invalid_response",
   });
 });
+test("normalizes JSON wrapped in provider preambles or code fences", () => {
+  const kit = {
+    changelog: "Update",
+    twitterMessages: ["One"],
+    linkedin: "LinkedIn",
+    helpFaq: "FAQ",
+    emailNewsletter: "Email",
+  };
+  const payload = JSON.stringify(kit);
+  assert.deepEqual(normalizeKitResponse(`Here is your kit:\n${payload}`), kit);
+  assert.deepEqual(normalizeKitResponse("```json\n" + payload + "\n```"), kit);
+});
 test("unknown token counts remain unknown and invalid counts are not fabricated", () => {
   assert.deepEqual(normalizeUsage(), { inputTokens: null, outputTokens: null });
   assert.deepEqual(normalizeUsage(NaN, -2), {

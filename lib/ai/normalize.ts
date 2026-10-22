@@ -21,12 +21,17 @@ export function normalizeText(value: unknown): string {
 export function normalizeKitResponse(text: string): GenerationResult {
   let value: unknown;
   try {
-    value = JSON.parse(
-      normalizeText(text).replace(
-        /^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i,
-        "$1",
-      ),
-    );
+    const normalized = normalizeText(text)
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "");
+    try {
+      value = JSON.parse(normalized);
+    } catch {
+      const start = normalized.indexOf("{");
+      const end = normalized.lastIndexOf("}");
+      if (start < 0 || end <= start) throw new Error("missing JSON object");
+      value = JSON.parse(normalized.slice(start, end + 1));
+    }
   } catch {
     throw new AiError(
       "invalid_response",

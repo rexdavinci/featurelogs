@@ -21,6 +21,7 @@ import {
 } from "@/lib/db/server";
 import { getSessionUser } from "@/utils/session";
 import { assertRateLimit } from "@/utils/rate-limit";
+import { AiError } from "@/lib/ai/types";
 
 type GenerationPayload = {
   changelog: string;
@@ -305,10 +306,17 @@ export async function generatePackage(
       projectId,
       projectName,
     });
-  } catch {
+  } catch (error) {
+    console.error("Marketing kit generation failed", {
+      code: error instanceof AiError ? error.code : "unknown",
+      message: error instanceof Error ? error.message : "unknown error",
+    });
     return {
       ok: false,
-      error: "Content generation provider failed. Please try again.",
+      error:
+        error instanceof AiError && error.code === "invalid_response"
+          ? "The AI returned an incomplete marketing kit. Please try again."
+          : "Content generation provider failed. Please try again.",
     };
   }
 
