@@ -33,10 +33,22 @@ export function normalizeKitResponse(text: string): GenerationResult {
       value = JSON.parse(normalized.slice(start, end + 1));
     }
   } catch {
-    throw new AiError(
-      "invalid_response",
-      "The AI provider did not return valid update JSON.",
-    );
+    try {
+      const normalized = normalizeText(text)
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "");
+      const start = normalized.indexOf("{");
+      const end = normalized.lastIndexOf("}");
+      if (start < 0 || end <= start) throw new Error("missing JSON object");
+      value = JSON.parse(
+        normalized.slice(start, end + 1).replace(/,\s*([}\]])/g, "$1"),
+      );
+    } catch {
+      throw new AiError(
+        "invalid_response",
+        "The AI provider did not return valid update JSON.",
+      );
+    }
   }
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new AiError(

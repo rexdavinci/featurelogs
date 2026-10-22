@@ -14,10 +14,11 @@ export function createOpenRouterAdapter(
     appName: "FeatureLogs",
   });
   return {
-    async generate({ prompt }) {
+    async generate({ prompt, format }) {
       const response = await generateText({
         model: client(model),
         prompt,
+        ...(format === "json" ? { responseFormat: { type: "json" as const } } : {}),
         maxOutputTokens: 2400,
         temperature: 0.5,
         abortSignal: AbortSignal.timeout(60_000),

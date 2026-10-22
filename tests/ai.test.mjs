@@ -81,6 +81,10 @@ test("normalizes JSON wrapped in provider preambles or code fences", () => {
   const payload = JSON.stringify(kit);
   assert.deepEqual(normalizeKitResponse(`Here is your kit:\n${payload}`), kit);
   assert.deepEqual(normalizeKitResponse("```json\n" + payload + "\n```"), kit);
+  assert.deepEqual(
+    normalizeKitResponse(payload.replace('"One"]', '"One",]')),
+    kit,
+  );
 });
 test("unknown token counts remain unknown and invalid counts are not fabricated", () => {
   assert.deepEqual(normalizeUsage(), { inputTokens: null, outputTokens: null });
