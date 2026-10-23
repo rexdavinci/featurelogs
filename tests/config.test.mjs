@@ -18,7 +18,7 @@ test("explicit AI selection uses only the matching credentials and a provider-sp
   };
   for (const [provider, key, model] of [
     ["openai", "openai-test", "gpt-4.1-mini"],
-    ["openrouter", "router-test", "openai/gpt-4.1-mini"],
+    ["openrouter", "router-test", "google/gemini-2.5-flash-lite"],
     ["gemini", "gemini-test", "gemini-2.5-flash"],
   ]) {
     assert.deepEqual(parseEnv({ ...keys, AI_PROVIDER: provider }).ai, {

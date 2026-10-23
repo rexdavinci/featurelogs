@@ -64,7 +64,7 @@ export function parseEnv(source: Source) {
     mock: undefined,
   };
   const models = {
-    openrouter: "openai/gpt-4.1-mini",
+    openrouter: "google/gemini-2.5-flash-lite",
     openai: "gpt-4.1-mini",
     gemini: "gemini-2.5-flash",
     mock: "local-template",
