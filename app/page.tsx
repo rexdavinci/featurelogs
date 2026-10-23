@@ -250,6 +250,30 @@ export default async function Home() {
         </div>
       </section>
       <RoadmapBoard />
+      <section className="producthunt-section" aria-labelledby="producthunt-title">
+        <div className="producthunt-card">
+          <div className="producthunt-card-heading">
+            <img
+              alt="FeatureLogs"
+              src="https://ph-files.imgix.net/9163443c-021d-42ac-baea-60d655960d90.png?auto=compress,format&codec=mozjpeg&cs=strip&fit=crop&h=80&w=80"
+              width={64}
+              height={64}
+            />
+            <div>
+              <h2 id="producthunt-title">FeatureLogs on Product Hunt</h2>
+              <p>Ship updates. Write less. Stay visible.</p>
+            </div>
+          </div>
+          <a
+            href="https://www.producthunt.com/products/featurelogs?embed=true&utm_source=embed&utm_medium=post_embed"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="producthunt-link"
+          >
+            Check it out on Product Hunt <ArrowUpRight size={15} />
+          </a>
+        </div>
+      </section>
       <section className="closing-cta">
         <span className="closing-mark">
           <BrandMark />

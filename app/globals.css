@@ -68,6 +68,61 @@ a {
 .text-gradient {
   color: var(--accent);
 }
+.producthunt-section {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 96px;
+}
+.producthunt-card {
+  width: min(100%, 500px);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(38 39 34 / 6%);
+}
+.producthunt-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.producthunt-card-heading img {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.producthunt-card-heading h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 18px;
+  line-height: 1.3;
+}
+.producthunt-card-heading p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.producthunt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 18px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #ff6154;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: transform 0.18s, background 0.18s;
+}
+.producthunt-link:hover {
+  background: #e94e43;
+  transform: translateY(-1px);
+}
 .landing-shell {
   max-width: 1240px;
   padding: 0 40px;
