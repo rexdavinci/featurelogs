@@ -22,10 +22,9 @@ try {
     await client.query(
       `CREATE ROLE featurelogs_runtime LOGIN PASSWORD '${password}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`,
     );
-  else
-    await client.query(
-      `ALTER ROLE featurelogs_runtime WITH LOGIN PASSWORD '${password}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`,
-    );
+  // Neon-managed owner roles may create roles but cannot alter an existing
+  // runtime role's password. Preserve the working runtime credential instead
+  // of rotating it on every provisioning run.
   await client.query(
     "GRANT featurelogs_app, featurelogs_auth TO featurelogs_runtime",
   );
@@ -35,9 +34,13 @@ try {
   await client.query(
     `GRANT CONNECT ON DATABASE ${identifier} TO featurelogs_runtime`,
   );
-  const runtimeUrl = new URL(adminUrl);
-  runtimeUrl.username = "featurelogs_runtime";
-  runtimeUrl.password = password;
+  const runtimeUrl = new URL(
+    rows.length ? process.env.DATABASE_URL || adminUrl : adminUrl,
+  );
+  if (!rows.length) {
+    runtimeUrl.username = "featurelogs_runtime";
+    runtimeUrl.password = password;
+  }
   const file = ".env.local";
   let source = await readFile(file, "utf8").catch((error) => {
     if (error.code === "ENOENT") return "";
@@ -58,11 +61,16 @@ try {
   console.log(
     "Restricted runtime role provisioned; local connection settings updated. Restart the app. Keep DATABASE_ADMIN_URL in migration environments only when deploying.",
   );
-} catch {
+} catch (error) {
   await client.query("ROLLBACK").catch(() => {});
   console.error(
-    "Database security provisioning failed; no credentials were printed. Check admin role permissions and migrations.",
+    "Database security provisioning failed; no credentials were printed.",
   );
+  if (error && typeof error === "object") {
+    const code = "code" in error ? String(error.code) : "UNKNOWN";
+    const message = "message" in error ? String(error.message) : "Unknown database error.";
+    console.error(`Database error (${code}): ${message}`);
+  }
   process.exitCode = 1;
 } finally {
   await client.end();
