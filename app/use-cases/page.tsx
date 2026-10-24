@@ -48,6 +48,12 @@ const USE_CASES = [
     summary:
       "Convert commits into X threads, LinkedIn posts, and email updates automatically.",
   },
+  {
+    href: "/resources/product-changelog-examples",
+    title: "Product Changelog Examples",
+    summary:
+      "Browse practical changelog examples and start with a release notes template.",
+  },
 ];
 
 export default function UseCasesPage() {
